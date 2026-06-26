@@ -1,0 +1,93 @@
+{
+  "nav": {
+    "services": "Perkhidmatan",
+    "packages": "Pakej",
+    "portfolio": "Portfolio",
+    "about": "Tentang",
+    "contact": "Hubungi",
+    "enquire": "Rancang majlis anda"
+  },
+  "hero": {
+    "eyebrow": "Acara & Hiasan · Malaysia",
+    "title": "Kami mengubah ruang menjadi detik tidak terlupakan",
+    "subtitle": "Gubahan, bunga, pentas dan pencahayaan khusus untuk majlis perkahwinan, acara korporat dan sambutan.",
+    "cta": "Rancang majlis anda",
+    "secondary": "Lihat hasil kerja kami"
+  },
+  "services": {
+    "title": "Apa yang kami cipta",
+    "subtitle": "Reka bentuk dan pelaksanaan menyeluruh, disesuaikan dengan kisah anda.",
+    "items": [
+      { "title": "Perkahwinan", "desc": "Gubahan majlis, gerbang bunga dan pencahayaan beraura." },
+      { "title": "Korporat", "desc": "Pentas, penjenamaan dan persekitaran acara yang menarik." },
+      { "title": "Sambutan", "desc": "Hari jadi, pertunangan dan detik penting digubah mengikut citarasa anda." },
+      { "title": "Konsep tersuai", "desc": "Ada visi? Kami reka dan bina dari awal." }
+    ]
+  },
+  "showcase": {
+    "title": "Karya pilihan",
+    "subtitle": "Sekilas acara terkini yang kami realisasikan."
+  },
+  "about": {
+    "title": "Direka dengan teliti",
+    "body": "Kami sebuah studio acara dan hiasan Malaysia yang mencipta pengalaman tersuai — daripada konsep dan gubahan sehingga pelaksanaan sempurna pada hari acara."
+  },
+  "contact": {
+    "title": "Mari rancang sesuatu yang indah",
+    "subtitle": "Ceritakan tentang majlis anda dan kami akan sediakan cadangan tersuai.",
+    "cta": "Mula pertanyaan"
+  },
+  "footer": {
+    "tagline": "Acara & hiasan tersuai.",
+    "rights": "Hak cipta terpelihara."
+  },
+  "form": {
+    "title": "Rancang majlis anda",
+    "subtitle": "Kongsi beberapa butiran dan kami akan sediakan cadangan tersuai.",
+    "steps": ["Acara", "Visi", "Butiran", "Anda"],
+    "fields": {
+      "eventType": "Jenis acara",
+      "eventDate": "Tarikh acara",
+      "eventTime": "Masa",
+      "venue": "Lokasi",
+      "theme": "Tema & pilihan",
+      "budget": "Julat bajet",
+      "purpose": "Tujuan acara",
+      "guestCount": "Anggaran tetamu",
+      "images": "Gambar rujukan",
+      "imagesHint": "Muat naik gambar inspirasi atau rujukan (pilihan).",
+      "specialRequest": "Permintaan khas",
+      "name": "Nama anda",
+      "email": "E-mel",
+      "phone": "Telefon",
+      "language": "Bahasa pilihan"
+    },
+    "eventTypes": {
+      "WEDDING": "Perkahwinan",
+      "CORPORATE": "Korporat",
+      "BIRTHDAY": "Hari jadi",
+      "ENGAGEMENT": "Pertunangan",
+      "FESTIVAL": "Perayaan",
+      "PRODUCT_LAUNCH": "Pelancaran produk",
+      "OTHER": "Lain-lain"
+    },
+    "budgets": {
+      "UNDER_10K": "Bawah RM10,000",
+      "RM10_30K": "RM10,000 – 30,000",
+      "RM30_50K": "RM30,000 – 50,000",
+      "RM50_100K": "RM50,000 – 100,000",
+      "ABOVE_100K": "Melebihi RM100,000"
+    },
+    "next": "Seterusnya",
+    "back": "Kembali",
+    "submit": "Hantar pertanyaan",
+    "submitting": "Menghantar…",
+    "success": {
+      "title": "Terima kasih — pertanyaan anda telah diterima",
+      "body": "Pasukan kami akan menyemak acara anda dan menghubungi anda tidak lama lagi dengan cadangan tersuai.",
+      "ref": "Nombor rujukan anda",
+      "home": "Kembali ke laman utama"
+    },
+    "errorGeneric": "Sesuatu tidak kena. Sila cuba lagi."
+  }
+}

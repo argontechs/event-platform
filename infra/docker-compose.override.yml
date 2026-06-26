@@ -1,0 +1,19 @@
+# Deployment override for the aapanel host.
+# - Publishes the Next.js web app on host port 3100 (Caddy is skipped:
+#   no real domains yet, and 80/443 are left untouched on the panel host).
+# - Unpublishes data-service host ports so nothing collides with the
+#   whitelabel prod stack (8081-8096) or the Aurora stack (3000/5433/6380/8000).
+#   Services still reach each other over the compose network by name.
+services:
+  web:
+    ports:
+      - "3000:3000"
+
+  postgres:
+    ports: !reset []
+
+  redis:
+    ports: !reset []
+
+  minio:
+    ports: !reset []

@@ -1,0 +1,93 @@
+{
+  "nav": {
+    "services": "Services",
+    "packages": "Packages",
+    "portfolio": "Portfolio",
+    "about": "About",
+    "contact": "Contact",
+    "enquire": "Plan your event"
+  },
+  "hero": {
+    "eyebrow": "Event & Decoration · Malaysia",
+    "title": "We turn spaces into unforgettable moments",
+    "subtitle": "Bespoke styling, floral, staging and lighting for weddings, corporate events and celebrations.",
+    "cta": "Plan your event",
+    "secondary": "View our work"
+  },
+  "services": {
+    "title": "What we create",
+    "subtitle": "End-to-end design and execution, tailored to your story.",
+    "items": [
+      { "title": "Weddings", "desc": "Ceremony and reception styling, floral arches and ambient lighting." },
+      { "title": "Corporate", "desc": "Stages, branding and immersive event environments." },
+      { "title": "Celebrations", "desc": "Birthdays, engagements and milestones styled your way." },
+      { "title": "Custom concepts", "desc": "Have a vision? We design and build it from scratch." }
+    ]
+  },
+  "showcase": {
+    "title": "Selected work",
+    "subtitle": "A glimpse of recent events we've brought to life."
+  },
+  "about": {
+    "title": "Designed in detail",
+    "body": "We are a Malaysian event and decoration studio crafting bespoke experiences — from concept and styling to flawless on-the-day execution."
+  },
+  "contact": {
+    "title": "Let's plan something beautiful",
+    "subtitle": "Tell us about your event and we'll prepare a tailored proposal.",
+    "cta": "Start your enquiry"
+  },
+  "footer": {
+    "tagline": "Bespoke events & decoration.",
+    "rights": "All rights reserved."
+  },
+  "form": {
+    "title": "Plan your event",
+    "subtitle": "Share a few details and we'll prepare a tailored proposal.",
+    "steps": ["Event", "Vision", "Details", "You"],
+    "fields": {
+      "eventType": "Event type",
+      "eventDate": "Event date",
+      "eventTime": "Time",
+      "venue": "Venue",
+      "theme": "Theme & preferences",
+      "budget": "Budget range",
+      "purpose": "Purpose of the event",
+      "guestCount": "Approx. guests",
+      "images": "Reference images",
+      "imagesHint": "Upload inspiration or reference photos (optional).",
+      "specialRequest": "Special requests",
+      "name": "Your name",
+      "email": "Email",
+      "phone": "Phone",
+      "language": "Preferred language"
+    },
+    "eventTypes": {
+      "WEDDING": "Wedding",
+      "CORPORATE": "Corporate",
+      "BIRTHDAY": "Birthday",
+      "ENGAGEMENT": "Engagement",
+      "FESTIVAL": "Festival",
+      "PRODUCT_LAUNCH": "Product launch",
+      "OTHER": "Other"
+    },
+    "budgets": {
+      "UNDER_10K": "Under RM10,000",
+      "RM10_30K": "RM10,000 – 30,000",
+      "RM30_50K": "RM30,000 – 50,000",
+      "RM50_100K": "RM50,000 – 100,000",
+      "ABOVE_100K": "Above RM100,000"
+    },
+    "next": "Next",
+    "back": "Back",
+    "submit": "Submit enquiry",
+    "submitting": "Submitting…",
+    "success": {
+      "title": "Thank you — we've received your enquiry",
+      "body": "Our team will review your event and get back to you shortly with a tailored proposal.",
+      "ref": "Your reference number",
+      "home": "Back to home"
+    },
+    "errorGeneric": "Something went wrong. Please try again."
+  }
+}

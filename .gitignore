@@ -1,0 +1,52 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# next.js
+.next/
+out/
+build/
+dist/
+
+# production
+*.tsbuildinfo
+next-env.d.ts
+
+# env
+.env
+.env*.local
+.env.docker
+
+# logs
+logs/
+*.log
+npm-debug.log*
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# prisma
+packages/db/prisma/migrations/dev.db*
+
+# docker volumes (if mounted locally)
+infra/data/
+
+# caddy
+infra/caddy-data/
+
+# playwright e2e
+apps/web/test-results/
+apps/web/playwright-report/
+apps/web/e2e/.fixtures.json
+apps/web/.auth/
+
+# runtime user uploads (local-disk storage volume)
+apps/web/uploads/
+uploads/
+
+# playwright-mcp browser session cache
+.playwright-mcp/

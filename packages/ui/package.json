@@ -1,0 +1,7 @@
+{
+  "name": "@event/ui",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.ts",
+  "comment": "Shared UI + 3D components land from Phase 4."
+}

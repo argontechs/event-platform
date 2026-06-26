@@ -1,0 +1,40 @@
+# Caddy reverse proxy — automatic HTTPS per company custom domain.
+#
+# Each company gets its own real domain (your chosen "custom domains only"
+# model). Add one site block per company; Caddy fetches & renews TLS certs
+# automatically. All blocks proxy to the single Next.js app, which resolves
+# the tenant by hostname (Phase 2).
+
+{
+	# Email used by Let's Encrypt for cert notices. Replace before going live.
+	email admin@example.com
+}
+
+# Edge security headers — HSTS (Caddy terminates TLS here) + drop the Server
+# banner. `import security_headers` in every site block below.
+(security_headers) {
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+	header -Server
+}
+
+# ─── Back office / group admin (single domain) ───
+admin.yourplatform.com {
+	import security_headers
+	reverse_proxy web:3000
+}
+
+# ─── Company #1 (replace with the real domain) ───
+acme-events.com, www.acme-events.com {
+	import security_headers
+	reverse_proxy web:3000
+}
+
+# ─── Company #2 (add more blocks as you onboard companies) ───
+# bloom-decor.com {
+# 	reverse_proxy web:3000
+# }
+
+# ─── Local development (optional): uncomment to test via Caddy locally ───
+# http://localhost {
+# 	reverse_proxy web:3000
+# }

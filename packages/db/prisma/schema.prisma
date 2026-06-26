@@ -1,0 +1,921 @@
+// Event & Decoration Platform — multi-tenant data model (Phase 1)
+//
+// Tenancy rule: every business row carries `companyId`. SUPER_ADMIN can read
+// across companies; all other users are scoped to their company (enforced in
+// the data-access layer in Phase 2).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────── Enums ───────────────────────────
+
+enum UserRole {
+  SUPER_ADMIN
+  COMPANY_ADMIN
+  SALES
+  PLANNER
+}
+
+enum Language {
+  EN
+  MS // Bahasa Malaysia
+  ZH // 中文
+}
+
+enum EventType {
+  WEDDING
+  CORPORATE
+  BIRTHDAY
+  ENGAGEMENT
+  FESTIVAL
+  PRODUCT_LAUNCH
+  OTHER
+}
+
+enum LeadStatus {
+  NEW
+  REVIEWING
+  QUOTED
+  ACCEPTED
+  REJECTED
+  CONVERTED
+  LOST
+}
+
+enum QuotationStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum BookingStatus {
+  CONFIRMED
+  IN_PLANNING
+  READY
+  EXECUTED
+  COMPLETED
+  CLOSED
+  CANCELLED
+}
+
+enum InvoiceType {
+  DEPOSIT
+  BALANCE
+  FULL
+  RECEIPT
+}
+
+enum InvoiceStatus {
+  ISSUED
+  PARTIAL
+  PAID
+  VOID
+}
+
+enum PaymentType {
+  DEPOSIT
+  BALANCE
+  OTHER
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  DUITNOW_QR
+  CASH
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  BLOCKED
+}
+
+enum AttachmentKind {
+  REFERENCE // customer-supplied reference images
+  MOODBOARD
+  LINE_ITEM
+  PAYMENT_PROOF
+  QUOTE_PDF
+  INVOICE_PDF
+  PORTFOLIO // company showcase images shown on the public site
+  PACKAGE // images for a service package / menu item
+  RECEIPT // staff expense-claim receipt
+  OTHER
+}
+
+enum AiDraftStatus {
+  PENDING
+  GENERATED
+  FAILED
+  APPLIED
+}
+
+// ─────────────────────────── Tenancy ───────────────────────────
+
+model Company {
+  id        String  @id @default(cuid())
+  name      String
+  legalName String?
+  ssmRegNo  String? // SSM company registration number
+
+  // SST (per-company; per-document override lives on Quotation/Invoice)
+  sstRegistered Boolean @default(false)
+  sstRegNo      String?
+  sstRate       Decimal @default(8.00) @db.Decimal(5, 2)
+
+  // Branding (drives sites, quotes, invoices, emails)
+  logoUrl        String?
+  brandPrimary   String? // hex
+  brandSecondary String?
+  brandFont      String?
+
+  // Contact / address
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  postcode     String?
+  country      String  @default("Malaysia")
+  phone        String?
+  email        String?
+
+  // Payment details (manual deposit flow)
+  bankName        String?
+  bankAccountName String?
+  bankAccountNo   String?
+  paymentInstructions String? // verbatim "Payment Details" block printed on invoices
+  duitnowQrUrl    String?
+
+  // Document numbering
+  quotePrefix   String @default("Q")
+  quoteNextSeq  Int    @default(1)
+  invoicePrefix String @default("INV")
+  invoiceNextSeq Int   @default(1)
+
+  // Quoting defaults
+  defaultProfitPercent  Decimal  @default(30.00) @db.Decimal(5, 2)
+  defaultDepositPercent Decimal  @default(50.00) @db.Decimal(5, 2)
+  defaultLanguage       Language @default(EN)
+
+  // Public site
+  customDomains String[] @default([])
+
+  // AI (OpenAI; key stored encrypted at rest — encryption handled in app layer)
+  aiEnabled       Boolean @default(true)
+  aiModel         String  @default("gpt-4o")
+  aiApiKeyEnc     String?
+
+  // WhatsApp Business (Meta Cloud API) — per-company number + token (encrypted)
+  waPhoneNumberId   String?
+  waAccessTokenEnc  String?
+  waBusinessId      String?
+  waBotEnabled      Boolean @default(true)
+
+  // Terms & conditions printed on quotations/invoices
+  termsAndConditions String?
+
+  // SEO / marketing (public site <head>)
+  seoTitle       String?
+  seoDescription String?
+  ogImageUrl     String?
+
+  // Social links (public site footer)
+  facebookUrl  String?
+  instagramUrl String?
+  tiktokUrl    String?
+  youtubeUrl   String?
+
+  // Cloudflare DNS binding (API token encrypted at rest)
+  cloudflareApiTokenEnc String?
+  cloudflareZoneId      String?
+
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users         User[]
+  customers     Customer[]
+  leads         Lead[]
+  quotations    Quotation[]
+  bookings      Booking[]
+  invoices      Invoice[]
+  payments      Payment[]
+  locations     Location[]
+  suppliers     Supplier[]
+  inventory     InventoryItem[]
+  planningTasks PlanningTask[]
+  runSheet      RunSheetEntry[]
+  bookingCrew   BookingCrew[]
+  expenses      Expense[]
+  prepItems     PrepItem[]
+  pettyCash     PettyCashEntry[]
+  attachments   Attachment[]
+  aiDrafts      AiDraft[]
+  checklists    ChecklistTemplate[]
+  waConversations WhatsappConversation[]
+  waMessages      WhatsappMessage[]
+  packages      Package[]
+
+  @@index([status])
+}
+
+model Package {
+  id          String   @id @default(cuid())
+  companyId   String
+  name        String
+  category    String?
+  description String?
+  price       Decimal  @default(0) @db.Decimal(12, 2)
+  imageUrls   Json     @default("[]") // array of /api/uploads/... image URLs
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+}
+
+model WhatsappConversation {
+  id            String    @id @default(cuid())
+  companyId     String
+  customerId    String?
+  waPhone       String // customer phone in E.164 (no +), e.g. 60123456789
+  name          String?
+  lastMessageAt DateTime  @default(now())
+  lastInboundAt DateTime?
+  unread        Int       @default(0)
+  botActive     Boolean   @default(false)
+  botStep       Int       @default(0)
+  botData       Json      @default("{}")
+  createdAt     DateTime  @default(now())
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  messages WhatsappMessage[]
+
+  @@unique([companyId, waPhone])
+  @@index([companyId, lastMessageAt])
+}
+
+model WhatsappMessage {
+  id             String   @id @default(cuid())
+  companyId      String
+  conversationId String
+  direction      String // "IN" | "OUT"
+  waMessageId    String?  @unique
+  body           String?
+  mediaUrl       String?
+  status         String   @default("sent") // received/sent/delivered/read/failed
+  createdAt      DateTime @default(now())
+
+  company      Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  conversation WhatsappConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         UserRole @default(SALES)
+  companyId    String? // null for SUPER_ADMIN (group level)
+  status       String   @default("active")
+  // Bumped to invalidate every outstanding session for this user (password reset
+  // / log-out-everywhere). Embedded in the JWT and checked on each request.
+  tokenVersion Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  company          Company?       @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  assignedTasks    PlanningTask[] @relation("TaskAssignee")
+  crewAssignments  BookingCrew[]  @relation("CrewMember")
+  submittedExpenses Expense[]     @relation("ExpenseSubmitter")
+  approvedExpenses  Expense[]     @relation("ExpenseApprover")
+  pettyCashSubmitted PettyCashEntry[] @relation("PettyCashSubmitter")
+  pettyCashApproved  PettyCashEntry[] @relation("PettyCashApprover")
+
+  @@index([companyId])
+  @@index([role])
+}
+
+// ─────────────────────────── CRM / intake ───────────────────────────
+
+model Customer {
+  id        String   @id @default(cuid())
+  companyId String
+  name      String
+  email     String?
+  phone     String?
+  org       String? // customer's own company/organisation
+  sstNumber String? // customer's SST registration no. (for B2B exemption)
+  sstB2bExempt Boolean @default(false) // same-category B2B service-tax exemption applies
+  language  Language @default(EN)
+  source    String? // where the lead came from
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company    Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  leads      Lead[]
+  quotations Quotation[]
+  bookings   Booking[]
+  waConversations WhatsappConversation[]
+
+  @@index([companyId])
+  @@index([companyId, email])
+}
+
+model Lead {
+  id          String     @id @default(cuid())
+  companyId   String
+  customerId  String?
+  referenceNo String     @unique // e.g. ACME-EVT-2026-0042
+  uploadToken String?    @unique // public, password-gated "add more photos" link
+  uploadPin   String? // short access code the customer enters to upload
+  eventType   EventType  @default(OTHER)
+  eventDate   DateTime?
+  venueText   String?
+  guestCount  Int?
+  budgetMin   Decimal?   @db.Decimal(12, 2)
+  budgetMax   Decimal?   @db.Decimal(12, 2)
+  theme       String?
+  colors      String[]   @default([])
+  services    String[]   @default([]) // requested services
+  purpose     String? // purpose of the event
+  message     String?
+  specialRequest String? // remark for special requests
+  eventTime   String? // preferred time, e.g. "18:00"
+  preferredLanguage Language @default(EN)
+  status      LeadStatus @default(NEW)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customer    Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  attachments Attachment[]
+  aiDrafts    AiDraft[]
+  quotations  Quotation[]
+
+  @@index([companyId])
+  @@index([companyId, status])
+}
+
+// ─────────────────────────── AI planning ───────────────────────────
+
+model AiDraft {
+  id          String        @id @default(cuid())
+  companyId   String
+  leadId      String
+  status      AiDraftStatus @default(PENDING)
+  model       String?
+  prompt      String?       @db.Text
+  planDraft   String?       @db.Text
+  materials   Json? // [{ name, qty, unit, estCost, analysis }]
+  questions   Json? // [string]
+  draftLines  Json? // [{ description, category, quantity, unit, costPrice }]
+  tokenInput  Int           @default(0)
+  tokenOutput Int           @default(0)
+  costUsd     Decimal       @default(0) @db.Decimal(10, 4)
+  createdById String?
+  createdAt   DateTime      @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  lead    Lead    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([leadId])
+}
+
+// ─────────────────────────── Quotation ───────────────────────────
+
+model Quotation {
+  id                   String          @id @default(cuid())
+  companyId            String
+  leadId               String?
+  customerId           String?
+  number               String          @unique
+  status               QuotationStatus @default(DRAFT)
+  currency             String          @default("MYR")
+  profitPercentDefault Decimal         @default(30.00) @db.Decimal(5, 2)
+  subtotal             Decimal         @default(0) @db.Decimal(12, 2)
+  discount             Decimal         @default(0) @db.Decimal(12, 2)
+  sstApplied           Boolean         @default(false) // per-document override
+  b2bExempt            Boolean         @default(false) // B2B same-category service-tax exemption (voids SST)
+  sstRate              Decimal         @default(0) @db.Decimal(5, 2)
+  sstAmount            Decimal         @default(0) @db.Decimal(12, 2)
+  total                Decimal         @default(0) @db.Decimal(12, 2)
+  depositPercent       Decimal         @default(50.00) @db.Decimal(5, 2)
+  depositAmount        Decimal         @default(0) @db.Decimal(12, 2)
+  validUntil           DateTime?
+  notes                String?
+  // Document letterhead fields (prefilled from the lead, editable)
+  preparedBy           String?
+  eventDate            DateTime?
+  setupTime            String?
+  startTime            String?
+  dismantleTime        String?
+  venue                String?
+  publicToken          String          @unique @default(cuid()) // tokenized public quote page
+  viewPin              String? // password the customer enters to open the proposal link
+  customerFeedback     String? // latest "request changes" comment from the customer
+  changesRequested     Boolean         @default(false)
+  revisionCount        Int             @default(0)
+  sentAt               DateTime?
+  acceptedAt           DateTime?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  company     Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  lead        Lead?           @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  customer    Customer?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items       QuotationItem[]
+  attachments Attachment[]
+  booking     Booking?
+  invoices    Invoice[]
+
+  @@index([companyId])
+  @@index([companyId, status])
+}
+
+model QuotationItem {
+  id            String  @id @default(cuid())
+  quotationId   String
+  companyId     String
+  description   String
+  category      String?
+  quantity      Decimal @default(1) @db.Decimal(12, 2)
+  unit          String  @default("unit")
+  costPrice     Decimal @default(0) @db.Decimal(12, 2) // per unit
+  profitPercent Decimal @default(30.00) @db.Decimal(5, 2) // per-line override
+  unitPrice     Decimal @default(0) @db.Decimal(12, 2) // selling per unit (cost + profit)
+  lineTotal     Decimal @default(0) @db.Decimal(12, 2)
+  referenceImageUrl String?
+  sortOrder     Int     @default(0)
+
+  quotation   Quotation    @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  attachments Attachment[]
+
+  @@index([quotationId])
+}
+
+// ─────────────────────────── Booking / event ───────────────────────────
+
+model Booking {
+  id            String        @id @default(cuid())
+  companyId     String
+  quotationId   String?       @unique // null for events created manually in the planning dashboard
+  customerId    String?
+  title         String
+  eventType     EventType     @default(OTHER)
+  eventDate     DateTime?
+  locationId    String?
+  venueText     String?
+  status        BookingStatus @default(CONFIRMED)
+  totalAmount   Decimal       @default(0) @db.Decimal(12, 2)
+  depositPaid   Decimal       @default(0) @db.Decimal(12, 2)
+  balanceDue    Decimal       @default(0) @db.Decimal(12, 2)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  company       Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  quotation     Quotation?            @relation(fields: [quotationId], references: [id], onDelete: SetNull)
+  customer      Customer?             @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  location      Location?             @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  invoices      Invoice[]
+  payments      Payment[]
+  tasks         PlanningTask[]
+  runSheet      RunSheetEntry[]
+  suppliers     BookingSupplier[]
+  allocations   InventoryAllocation[]
+  crew          BookingCrew[]
+  expenses      Expense[]
+  prepItems     PrepItem[]
+
+  @@index([companyId])
+  @@index([companyId, status])
+  @@index([eventDate])
+}
+
+// ─────────────────────────── Billing ───────────────────────────
+
+model Invoice {
+  id               String        @id @default(cuid())
+  companyId        String
+  bookingId        String?
+  quotationId      String?
+  number           String        @unique
+  type             InvoiceType   @default(DEPOSIT)
+  status           InvoiceStatus @default(ISSUED)
+  customerSnapshot Json? // name/address/contact frozen at issue time
+  items            Json? // frozen line items
+  subtotal         Decimal       @default(0) @db.Decimal(12, 2)
+  discount         Decimal       @default(0) @db.Decimal(12, 2)
+  sstApplied       Boolean       @default(false)
+  b2bExempt        Boolean       @default(false) // B2B same-category service-tax exemption (voids SST)
+  sstRate          Decimal       @default(0) @db.Decimal(5, 2)
+  sstAmount        Decimal       @default(0) @db.Decimal(12, 2)
+  rounding         Decimal       @default(0) @db.Decimal(12, 2) // MYR 0.05 rounding adjustment
+  total            Decimal       @default(0) @db.Decimal(12, 2)
+  amountPaid       Decimal       @default(0) @db.Decimal(12, 2)
+  balanceDue       Decimal       @default(0) @db.Decimal(12, 2)
+  remarks          String?
+  paymentTerm      String?       @default("NET30")
+  // Document letterhead fields (snapshot from quote, editable)
+  preparedBy       String?
+  eventDate        DateTime?
+  setupTime        String?
+  startTime        String?
+  dismantleTime    String?
+  venue            String?
+  pdfUrl           String?
+  issuedAt         DateTime      @default(now())
+  createdAt        DateTime      @default(now())
+
+  company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  booking   Booking?   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  quotation Quotation? @relation(fields: [quotationId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@index([bookingId])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  companyId     String
+  bookingId     String
+  type          PaymentType   @default(DEPOSIT)
+  method        PaymentMethod @default(BANK_TRANSFER)
+  amount        Decimal       @db.Decimal(12, 2)
+  reference     String?
+  proofUrl      String?
+  status        PaymentStatus @default(PENDING)
+  recordedById  String?
+  confirmedById String?
+  confirmedAt   DateTime?
+  createdAt     DateTime      @default(now())
+
+  company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  booking     Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  attachments Attachment[]
+
+  @@index([companyId])
+  @@index([bookingId])
+}
+
+// ─────────────────────────── Planning ───────────────────────────
+
+model Location {
+  id           String  @id @default(cuid())
+  companyId    String
+  name         String
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  postcode     String?
+  lat          Float?
+  lng          Float?
+  capacity     Int?
+  contactName  String?
+  contactPhone String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@index([companyId])
+}
+
+model Supplier {
+  id          String   @id @default(cuid())
+  companyId   String
+  name        String
+  type        String? // florist, lighting, catering, AV...
+  contactName String?
+  phone       String?
+  email       String?
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  company  Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  bookings BookingSupplier[]
+
+  @@index([companyId])
+}
+
+model BookingSupplier {
+  id         String  @id @default(cuid())
+  bookingId  String
+  supplierId String
+  role       String?
+  cost       Decimal? @db.Decimal(12, 2)
+  notes      String?
+
+  booking  Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@unique([bookingId, supplierId])
+  @@index([bookingId])
+}
+
+model InventoryItem {
+  id           String   @id @default(cuid())
+  companyId    String
+  name         String
+  category     String?
+  qtyTotal     Int      @default(0)
+  qtyAvailable Int      @default(0)
+  unit         String   @default("unit")
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  company     Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  allocations InventoryAllocation[]
+
+  @@index([companyId])
+}
+
+model InventoryAllocation {
+  id              String  @id @default(cuid())
+  bookingId       String
+  inventoryItemId String
+  qty             Int     @default(1)
+  notes           String?
+
+  booking       Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@index([inventoryItemId])
+}
+
+model PlanningTask {
+  id         String     @id @default(cuid())
+  companyId  String
+  bookingId  String
+  title      String
+  category   String?
+  status     TaskStatus @default(TODO)
+  assigneeId String?
+  dueDate    DateTime?
+  sortOrder  Int        @default(0)
+  notes      String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  company  Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  booking  Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  assignee User?   @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@index([bookingId])
+}
+
+enum CrewPhase {
+  SETUP
+  DISMANTLE
+  BOTH
+}
+
+model BookingCrew {
+  id        String    @id @default(cuid())
+  companyId String
+  bookingId String
+  userId    String? // a system staff member, if chosen
+  name      String? // free-text name when not a system user
+  phase     CrewPhase @default(SETUP)
+  role      String? // e.g. Lead, Florist, Driver
+  phone     String?
+  notes     String?
+  createdAt DateTime  @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  user    User?   @relation("CrewMember", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@index([bookingId])
+}
+
+enum PrepKind {
+  MATERIAL
+  OPERATION
+}
+
+model PrepItem {
+  id        String   @id @default(cuid())
+  companyId String
+  bookingId String
+  kind      PrepKind @default(MATERIAL)
+  label     String
+  qty       String? // free text: "x6", "2 SET"
+  remark    String?
+  done      Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([bookingId])
+}
+
+model RunSheetEntry {
+  id        String   @id @default(cuid())
+  companyId String
+  bookingId String
+  time      String? // "14:30" — event-day schedule
+  activity  String
+  owner     String?
+  notes     String?
+  sortOrder Int      @default(0)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+}
+
+model ChecklistTemplate {
+  id        String    @id @default(cuid())
+  companyId String? // null = global default template
+  eventType EventType
+  items     Json // [{ title, category }] — seeds PlanningTask on booking creation
+  createdAt DateTime  @default(now())
+
+  company Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([eventType])
+}
+
+// ─────────────────────────── Attachments / ops ───────────────────────────
+
+model Attachment {
+  id              String         @id @default(cuid())
+  companyId       String
+  kind            AttachmentKind @default(OTHER)
+  url             String
+  filename        String?
+  mimeType        String?
+  sizeBytes       Int?
+  leadId          String?
+  quotationId     String?
+  quotationItemId String?
+  paymentId       String?
+  expenseId       String?
+  pettyCashId     String?
+  uploadedById    String?
+  createdAt       DateTime       @default(now())
+
+  company       Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  lead          Lead?           @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  quotation     Quotation?      @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  quotationItem QuotationItem?  @relation(fields: [quotationItemId], references: [id], onDelete: Cascade)
+  payment       Payment?        @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  expense       Expense?        @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  pettyCash     PettyCashEntry? @relation(fields: [pettyCashId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([leadId])
+  @@index([quotationId])
+  @@index([expenseId])
+  @@index([pettyCashId])
+}
+
+enum PettyCashType {
+  TOPUP // cash IN — bring forward / reimbursement
+  SPEND // cash OUT
+}
+
+enum PettyCashStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model PettyCashEntry {
+  id            String          @id @default(cuid())
+  companyId     String
+  type          PettyCashType   @default(SPEND)
+  entryDate     DateTime
+  voucherNo     String?
+  payTo         String? // person paid / who spent (SPEND); source label (TOPUP)
+  description   String
+  category      String? // petrol, parking, hardware, transport, meal, misc
+  amount        Decimal         @default(0) @db.Decimal(12, 2)
+  status        PettyCashStatus @default(PENDING)
+  submittedById String?
+  approvedById  String?
+  approvedAt    DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  submittedBy User?        @relation("PettyCashSubmitter", fields: [submittedById], references: [id], onDelete: SetNull)
+  approver    User?        @relation("PettyCashApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  attachments Attachment[]
+
+  @@index([companyId])
+  @@index([companyId, type])
+  @@index([entryDate])
+}
+
+enum ExpenseCategory {
+  MATERIALS
+  TRANSPORT
+  RENTAL
+  FOOD
+  MARKETING
+  SALARY
+  MISC
+}
+
+enum ExpenseStatus {
+  SUBMITTED
+  APPROVED
+  REJECTED
+  REIMBURSED
+}
+
+model Expense {
+  id            String          @id @default(cuid())
+  companyId     String
+  submittedById String?
+  bookingId     String? // optional link to an event
+  vendor        String
+  expenseDate   DateTime
+  category      ExpenseCategory @default(MATERIALS)
+  amount        Decimal         @default(0) @db.Decimal(12, 2)
+  sstAmount     Decimal         @default(0) @db.Decimal(12, 2)
+  currency      String          @default("MYR")
+  paymentMethod String?
+  status        ExpenseStatus   @default(SUBMITTED)
+  notes         String?
+  ocrRaw        Json? // raw structured OCR output for reference
+  approvedById  String?
+  approvedAt    DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  submittedBy User?        @relation("ExpenseSubmitter", fields: [submittedById], references: [id], onDelete: SetNull)
+  approver    User?        @relation("ExpenseApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  booking     Booking?     @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  attachments Attachment[]
+
+  @@index([companyId])
+  @@index([companyId, status])
+  @@index([expenseDate])
+}
+
+model EmailLog {
+  id        String   @id @default(cuid())
+  companyId String?
+  to        String
+  subject   String
+  template  String?
+  status    String   @default("queued")
+  error     String?
+  createdAt DateTime @default(now())
+
+  @@index([companyId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  companyId String?
+  userId    String?
+  action    String
+  entity    String?
+  entityId  String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([companyId])
+  @@index([entity, entityId])
+}

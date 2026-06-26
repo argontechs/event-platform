@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(60% 60% at 20% 10%, rgba(37, 99, 235, 0.20), transparent 60%),
+    radial-gradient(50% 50% at 90% 90%, rgba(14, 116, 233, 0.16), transparent 60%),
+    #060c1c;
+  color: #eef3ff;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Motion & flair (bold/animated public site) ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(26px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+.reveal { opacity: 0; animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.reveal-1 { animation-delay: 0.08s; }
+.reveal-2 { animation-delay: 0.18s; }
+.reveal-3 { animation-delay: 0.28s; }
+.reveal-4 { animation-delay: 0.38s; }
+.float { animation: floaty 6s ease-in-out infinite; }
+.gradient-text {
+  background: linear-gradient(90deg, #7cc0ff, #a78bfa, #7cc0ff);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradientShift 6s linear infinite;
+}
+.card-glow {
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.card-glow:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 50px -24px rgba(47, 111, 237, 0.55);
+  border-color: rgba(124, 192, 255, 0.5);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; animation: none; }
+  .float, .gradient-text { animation: none; }
+}
+
+/* ── Printable A4 documents (quotation / invoice) ──
+   When printing or "Save as PDF", hide all app chrome and lay the document out
+   as fixed A4 pages that overflow into page 2, 3, … as one PDF. */
+@page {
+  size: A4;
+  margin: 14mm;
+}
+@media print {
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .print\:hidden {
+    display: none !important;
+  }
+  /* The document flows in normal layout (NOT absolute) so it can paginate
+     across pages — absolute positioning would clip everything past page 1. */
+  .print-document {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    width: 100% !important;
+  }
+  /* Force a real new page before these sections (T&C, design images). */
+  .page-break {
+    break-before: page;
+    page-break-before: always;
+  }
+  /* Clean page breaks: repeat table headers, never split a row/image. */
+  thead {
+    display: table-header-group;
+  }
+  tr,
+  .avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

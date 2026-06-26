@@ -1,0 +1,21 @@
+{
+  "name": "event-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Multi-company event & decoration management platform (Malaysia)",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w web",
+    "build": "npm run build -w web",
+    "start": "npm run start -w web",
+    "lint": "npm run lint -w web",
+    "worker:dev": "npm run dev -w worker",
+    "worker:build": "npm run build -w worker"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

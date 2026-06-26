@@ -1,0 +1,93 @@
+{
+  "nav": {
+    "services": "服务",
+    "packages": "配套",
+    "portfolio": "作品",
+    "about": "关于",
+    "contact": "联系",
+    "enquire": "策划您的活动"
+  },
+  "hero": {
+    "eyebrow": "活动与布置 · 马来西亚",
+    "title": "我们将空间化为难忘时刻",
+    "subtitle": "为婚礼、企业活动与庆典提供定制造型、花艺、舞台与灯光。",
+    "cta": "策划您的活动",
+    "secondary": "查看作品"
+  },
+  "services": {
+    "title": "我们的创作",
+    "subtitle": "从设计到执行，量身打造您的故事。",
+    "items": [
+      { "title": "婚礼", "desc": "仪式与宴会布置、花门与氛围灯光。" },
+      { "title": "企业活动", "desc": "舞台、品牌呈现与沉浸式活动空间。" },
+      { "title": "庆典", "desc": "生日、订婚与重要时刻，按您的心意打造。" },
+      { "title": "定制概念", "desc": "有想法？我们从零设计并搭建。" }
+    ]
+  },
+  "showcase": {
+    "title": "精选作品",
+    "subtitle": "近期活动一瞥。"
+  },
+  "about": {
+    "title": "细节之美",
+    "body": "我们是一家马来西亚活动与布置工作室，打造定制体验——从概念、造型到活动当天的完美执行。"
+  },
+  "contact": {
+    "title": "一起策划美好",
+    "subtitle": "告诉我们您的活动，我们将准备专属方案。",
+    "cta": "开始咨询"
+  },
+  "footer": {
+    "tagline": "定制活动与布置。",
+    "rights": "版权所有。"
+  },
+  "form": {
+    "title": "策划您的活动",
+    "subtitle": "填写几项资料，我们将为您准备专属方案。",
+    "steps": ["活动", "构想", "详情", "您"],
+    "fields": {
+      "eventType": "活动类型",
+      "eventDate": "活动日期",
+      "eventTime": "时间",
+      "venue": "场地",
+      "theme": "主题与偏好",
+      "budget": "预算范围",
+      "purpose": "活动目的",
+      "guestCount": "预计人数",
+      "images": "参考图片",
+      "imagesHint": "上传灵感或参考照片（可选）。",
+      "specialRequest": "特别要求",
+      "name": "您的姓名",
+      "email": "电子邮件",
+      "phone": "电话",
+      "language": "首选语言"
+    },
+    "eventTypes": {
+      "WEDDING": "婚礼",
+      "CORPORATE": "企业活动",
+      "BIRTHDAY": "生日",
+      "ENGAGEMENT": "订婚",
+      "FESTIVAL": "节庆",
+      "PRODUCT_LAUNCH": "产品发布",
+      "OTHER": "其他"
+    },
+    "budgets": {
+      "UNDER_10K": "RM10,000 以下",
+      "RM10_30K": "RM10,000 – 30,000",
+      "RM30_50K": "RM30,000 – 50,000",
+      "RM50_100K": "RM50,000 – 100,000",
+      "ABOVE_100K": "RM100,000 以上"
+    },
+    "next": "下一步",
+    "back": "上一步",
+    "submit": "提交咨询",
+    "submitting": "提交中…",
+    "success": {
+      "title": "感谢您——我们已收到您的咨询",
+      "body": "我们的团队将审阅您的活动，并尽快为您提供专属方案。",
+      "ref": "您的参考编号",
+      "home": "返回首页"
+    },
+    "errorGeneric": "出了点问题，请重试。"
+  }
+}
