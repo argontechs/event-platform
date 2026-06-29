@@ -14,7 +14,7 @@ cp .env.example .env
 #   AUTH_SECRET           (openssl rand -base64 48)
 #   APP_ENCRYPTION_KEY    (openssl rand -base64 32)  ← encrypts per-company AI keys
 #   DATABASE_URL=postgresql://eventapp:eventapp@postgres:5432/eventapp?schema=public
-#   REDIS_URL, S3_* (MinIO), SMTP_* (email), OPENAI_API_KEY (dev fallback)
+#   REDIS_URL, S3_* (MinIO), SMTP_* (email), OPENAI_API_KEY and/or ANTHROPIC_API_KEY (dev AI fallbacks)
 ```
 > Inside Docker, host is `postgres` / `minio` (service names), not `localhost`.
 

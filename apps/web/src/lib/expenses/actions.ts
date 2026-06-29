@@ -5,9 +5,9 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@event/db";
 import { requireUser, isSuperAdmin, canManageCompany } from "../auth/rbac";
 import { getActiveCompanyId } from "../tenant";
-import { decryptSecret } from "../crypto";
 import { saveUpload } from "../storage";
 import { extractReceipt, type ReceiptData } from "../ai/openai";
+import { resolveAiKey } from "../ai/resolve";
 import type { SessionUser } from "../auth/session";
 
 const CATEGORIES = ["MATERIALS", "TRANSPORT", "RENTAL", "FOOD", "MARKETING", "SALARY", "MISC"];
@@ -48,22 +48,18 @@ export async function extractReceiptAction(
   if (urls.length === 0) return { error: "Upload failed — try a clearer photo." };
 
   const company = await prisma.company.findUnique({ where: { id: companyId } });
-  // Respect the aiEnabled flag and never silently bill the platform key when a
-  // company's stored key won't decrypt — fall back to manual entry instead.
-  let apiKey: string | null = null;
-  if (company?.aiEnabled) {
-    apiKey = company.aiApiKeyEnc
-      ? decryptSecret(company.aiApiKeyEnc)
-      : process.env.OPENAI_API_KEY ?? null;
-  }
-  if (!apiKey) {
+  // Respect aiEnabled / provider / decrypt-failure. Any "no usable key" outcome
+  // degrades to manual entry (keep the uploaded receipts) rather than erroring.
+  const keyRes = company ? resolveAiKey(company) : ({ ok: false, error: "" } as const);
+  if (!keyRes.ok) {
     // No usable AI key — still return the saved receipts so the user can fill manually.
     return { error: "", ok: true, receiptUrls: urls.join(",") };
   }
   try {
     const data = await extractReceipt({
-      apiKey,
-      model: company?.aiModel ?? "gpt-4o",
+      provider: keyRes.provider,
+      apiKey: keyRes.key,
+      model: keyRes.model,
       imageUrls: urls,
     });
     return { error: "", ok: true, data, receiptUrls: urls.join(",") };

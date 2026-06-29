@@ -11,7 +11,7 @@ const csp = [
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   "media-src 'self'",
-  "connect-src 'self' https://nominatim.openstreetmap.org https://api.openai.com https://api.cloudflare.com https://graph.facebook.com",
+  "connect-src 'self' https://nominatim.openstreetmap.org https://api.openai.com https://api.anthropic.com https://api.cloudflare.com https://graph.facebook.com",
   "frame-src 'self' https://www.openstreetmap.org",
   "worker-src 'self' blob:",
   "object-src 'none'",

@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { NextRequest } from "next/server";
 import { prisma } from "@event/db";
-import { startBot, handleBotAnswer } from "@/lib/whatsapp/bot";
+import { startBot, handleBotAnswer, handleBotAnswerAI, isHandoffText } from "@/lib/whatsapp/bot";
 
 export const dynamic = "force-dynamic";
 
@@ -69,9 +69,28 @@ export async function POST(req: NextRequest) {
           select: {
             id: true, name: true, quotePrefix: true, waBotEnabled: true,
             waPhoneNumberId: true, waAccessTokenEnc: true,
+            aiEnabled: true, aiProvider: true, aiModel: true, aiApiKeyEnc: true,
+            waBotContext: true,
           },
         });
         if (!company) continue;
+
+        const botReady =
+          company.waBotEnabled && Boolean(company.waPhoneNumberId) && Boolean(company.waAccessTokenEnc);
+        const botCompany = {
+          id: company.id,
+          name: company.name,
+          quotePrefix: company.quotePrefix,
+          waPhoneNumberId: company.waPhoneNumberId,
+          waAccessTokenEnc: company.waAccessTokenEnc,
+          aiEnabled: company.aiEnabled,
+          aiProvider: company.aiProvider,
+          aiModel: company.aiModel,
+          aiApiKeyEnc: company.aiApiKeyEnc,
+          waBotContext: company.waBotContext,
+        };
+        // The AI bot runs at most once per conversation per delivery (cost control).
+        const aiJobs = new Map<string, { waPhone: string; text: string; handoff: boolean }>();
 
         const names = new Map<string, string>();
         for (const c of value?.contacts ?? []) {
@@ -128,19 +147,58 @@ export async function POST(req: NextRequest) {
             freshlyStored = false;
           }
 
-          // ── Conversational enquiry bot ── only on a genuinely new message
-          if (freshlyStored && company.waBotEnabled && company.waPhoneNumberId && company.waAccessTokenEnc) {
-            const c = { id: company.id, name: company.name, quotePrefix: company.quotePrefix, waPhoneNumberId: company.waPhoneNumberId, waAccessTokenEnc: company.waAccessTokenEnc };
-            const cv = { id: convo.id, companyId: convo.companyId, waPhone: convo.waPhone, botStep: convo.botStep, botData: convo.botData };
-            try {
-              if (isNew && !convo.botActive) {
-                await startBot(c, cv);
-              } else if (convo.botActive) {
-                await handleBotAnswer(c, cv, text);
+          // ── Conversational enquiry bot ──
+          if (freshlyStored && botReady) {
+            if (company.aiEnabled) {
+              // AI path: at most one LLM call per conversation per delivery, and
+              // only while the bot still owns the thread (mirror the scripted
+              // isNew/botActive gate) so a finalized/handed-off enquiry isn't
+              // re-finalized or revived. Spend the LLM turn on real text only;
+              // accumulate a handoff flag across the whole batch.
+              if (m?.type === "text" && text.trim() && (isNew || convo.botActive)) {
+                const prev = aiJobs.get(convo.id);
+                aiJobs.set(convo.id, {
+                  waPhone: convo.waPhone,
+                  text,
+                  handoff: (prev?.handoff ?? false) || isHandoffText(text),
+                });
+              } else if (isNew && !convo.botActive && !aiJobs.has(convo.id)) {
+                // First contact is non-text (photo/sticker) — greet so the
+                // customer isn't ignored; AI takes over on their next text.
+                const cv = { id: convo.id, companyId: convo.companyId, waPhone: convo.waPhone, botStep: convo.botStep, botData: convo.botData };
+                try {
+                  await startBot(botCompany, cv);
+                } catch {
+                  // bot failure must not break the webhook
+                }
               }
-            } catch {
-              // bot failure must not break the webhook
+            } else {
+              // Scripted path: inline per message (unchanged behaviour).
+              const cv = { id: convo.id, companyId: convo.companyId, waPhone: convo.waPhone, botStep: convo.botStep, botData: convo.botData };
+              try {
+                if (isNew && !convo.botActive) {
+                  await startBot(botCompany, cv);
+                } else if (convo.botActive) {
+                  await handleBotAnswer(botCompany, cv, text);
+                }
+              } catch {
+                // bot failure must not break the webhook
+              }
             }
+          }
+        }
+
+        // Run deferred AI bot jobs — one LLM call per conversation in this batch.
+        for (const [conversationId, job] of aiJobs) {
+          try {
+            await handleBotAnswerAI(
+              botCompany,
+              { id: conversationId, companyId: company.id, waPhone: job.waPhone },
+              job.text,
+              job.handoff,
+            );
+          } catch {
+            // bot failure must not break the webhook
           }
         }
 

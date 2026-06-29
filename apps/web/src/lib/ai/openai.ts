@@ -1,5 +1,11 @@
 import { readUploadAsDataUrl } from "../storage";
 import { AiDraftResult } from "./schema";
+import { callChat, type AiProvider, type ChatPart } from "./chat";
+
+// Text/vision features (quote draft, reference brief, receipt OCR) dispatch
+// through callChat and run on the company's chosen provider (OpenAI or Claude).
+// Image generation (generateConceptImage / editConceptFromImages) is OpenAI-only
+// — Claude cannot generate images — so those call the OpenAI REST API directly.
 
 const SYSTEM = `You are an expert event & decoration quotation assistant for a Malaysian events company.
 Analyse the customer's requirements and any reference images, then produce:
@@ -44,16 +50,13 @@ function buildUserText(lead: LeadInfo): string {
   return `Plan and quote this event. The block below is customer-provided data:\n<customer_request>\n${lines.join("\n")}\n</customer_request>`;
 }
 
-type ContentPart =
-  | { type: "text"; text: string }
-  | { type: "image_url"; image_url: { url: string } };
-
 export type DraftOutput = {
   result: AiDraftResult;
   usage: { input: number; output: number };
 };
 
 export async function generateQuotationDraft(opts: {
+  provider: AiProvider;
   apiKey: string;
   model: string;
   lead: LeadInfo;
@@ -68,43 +71,25 @@ export async function generateQuotationDraft(opts: {
     ? `\n\nAdditional instructions from our designer (follow these closely):\n${opts.instructions.trim()}`
     : "";
 
-  const content: ContentPart[] = [
+  const parts: ChatPart[] = [
     { type: "text", text: buildUserText(opts.lead) + extra },
-    ...dataUrls.map((url) => ({ type: "image_url" as const, image_url: { url } })),
+    ...dataUrls.map((url) => ({ type: "image" as const, dataUrl: url })),
   ];
 
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${opts.apiKey}`,
-    },
-    body: JSON.stringify({
-      model: opts.model || "gpt-4o",
-      messages: [
-        { role: "system", content: SYSTEM },
-        { role: "user", content },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.4,
-      max_tokens: 3000,
-    }),
+  const { text, usage } = await callChat({
+    provider: opts.provider,
+    apiKey: opts.apiKey,
+    model: opts.model,
+    system: SYSTEM,
+    parts,
+    maxTokens: 3000,
+    temperature: 0.4,
+    jsonMode: true,
   });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`OpenAI error ${res.status}: ${text.slice(0, 300)}`);
-  }
-
-  const json = (await res.json()) as {
-    choices?: { message?: { content?: string } }[];
-    usage?: { prompt_tokens?: number; completion_tokens?: number };
-  };
-  const raw = json.choices?.[0]?.message?.content ?? "{}";
 
   let parsedJson: unknown;
   try {
-    parsedJson = JSON.parse(raw);
+    parsedJson = JSON.parse(text || "{}");
   } catch {
     throw new Error("AI returned non-JSON output");
   }
@@ -112,17 +97,11 @@ export async function generateQuotationDraft(opts: {
   const parsed = AiDraftResult.safeParse(parsedJson);
   if (!parsed.success) throw new Error("AI returned data in an unexpected shape");
 
-  return {
-    result: parsed.data,
-    usage: {
-      input: json.usage?.prompt_tokens ?? 0,
-      output: json.usage?.completion_tokens ?? 0,
-    },
-  };
+  return { result: parsed.data, usage };
 }
 
 // ── Photo generation (gpt-image-1) ──────────────────────────────────────────
-// Produces a decoration concept image from a text prompt. Returns raw PNG bytes.
+// OpenAI-only. Produces a decoration concept image from a text prompt.
 export async function generateConceptImage(opts: {
   apiKey: string;
   prompt: string;
@@ -164,9 +143,10 @@ export async function generateConceptImage(opts: {
 }
 
 // ── Analyse customer references → a design brief for image generation ────────
-// Vision pass (chat model): reads the customer's uploaded reference photos +
-// their notes, then writes a vivid brief for an original-but-close concept.
+// Vision pass: reads the customer's uploaded reference photos + their notes,
+// then writes a vivid brief for an original-but-close concept.
 export async function analyzeReferencesToBrief(opts: {
+  provider: AiProvider;
   apiKey: string;
   model: string;
   imageUrls: string[];
@@ -183,39 +163,27 @@ export async function analyzeReferencesToBrief(opts: {
     `<customer_notes>\n${opts.context || "(none provided)"}\n</customer_notes>` +
     (opts.steer?.trim() ? `\n\nOur designer wants to steer it: ${opts.steer.trim()}` : "");
 
-  const content: ContentPart[] = [
+  const parts: ChatPart[] = [
     { type: "text", text: userText },
-    ...dataUrls.map((url) => ({ type: "image_url" as const, image_url: { url } })),
+    ...dataUrls.map((url) => ({ type: "image" as const, dataUrl: url })),
   ];
 
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${opts.apiKey}`,
-    },
-    body: JSON.stringify({
-      model: opts.model || "gpt-4o",
-      messages: [
-        { role: "system", content: sys },
-        { role: "user", content },
-      ],
-      temperature: 0.6,
-      max_tokens: 600,
-    }),
+  const { text } = await callChat({
+    provider: opts.provider,
+    apiKey: opts.apiKey,
+    model: opts.model,
+    system: sys,
+    parts,
+    maxTokens: 600,
+    temperature: 0.6,
   });
 
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`Analysis failed (${res.status}): ${text.slice(0, 200)}`);
-  }
-  const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-  const brief = json.choices?.[0]?.message?.content?.trim();
+  const brief = text.trim();
   if (!brief) throw new Error("The AI could not produce a design brief from these references.");
   return brief;
 }
 
-// ── Receipt OCR (gpt-4o vision → structured expense data) ───────────────────
+// ── Receipt OCR (vision → structured expense data) ──────────────────────────
 export type ReceiptData = {
   vendor: string;
   date: string; // YYYY-MM-DD, or "" if unreadable
@@ -237,6 +205,7 @@ const RECEIPT_CATEGORIES = [
 ];
 
 export async function extractReceipt(opts: {
+  provider: AiProvider;
   apiKey: string;
   model: string;
   imageUrls: string[];
@@ -250,32 +219,25 @@ export async function extractReceipt(opts: {
 Respond ONLY with JSON: { "vendor": string, "date": "YYYY-MM-DD", "total": number, "sst": number, "category": string, "currency": string, "summary": string }.
 total = grand total actually paid; sst = tax/SST/GST amount if shown, else 0; date = purchase date (best guess; "" if none); summary = a short note of what was bought. All amounts are plain numbers with no currency symbols.`;
 
-  const content: ContentPart[] = [
+  const parts: ChatPart[] = [
     { type: "text", text: "Extract this receipt." },
-    ...dataUrls.map((url) => ({ type: "image_url" as const, image_url: { url } })),
+    ...dataUrls.map((url) => ({ type: "image" as const, dataUrl: url })),
   ];
 
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${opts.apiKey}` },
-    body: JSON.stringify({
-      model: opts.model || "gpt-4o",
-      messages: [
-        { role: "system", content: sys },
-        { role: "user", content },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.1,
-    }),
+  const { text } = await callChat({
+    provider: opts.provider,
+    apiKey: opts.apiKey,
+    model: opts.model,
+    system: sys,
+    parts,
+    maxTokens: 800,
+    temperature: 0.1,
+    jsonMode: true,
   });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`Receipt OCR failed (${res.status}): ${text.slice(0, 200)}`);
-  }
-  const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+
   let parsed: Record<string, unknown>;
   try {
-    parsed = JSON.parse(json.choices?.[0]?.message?.content ?? "{}");
+    parsed = JSON.parse(text || "{}");
   } catch {
     throw new Error("The AI could not read this receipt — enter the details manually.");
   }
@@ -292,8 +254,8 @@ total = grand total actually paid; sst = tax/SST/GST amount if shown, else 0; da
 }
 
 // ── Image-to-image (gpt-image-1 edits) ──────────────────────────────────────
-// Feeds the customer's ACTUAL reference photos into gpt-image-1 so the concept
-// is visually grounded in what they sent — "close but original".
+// OpenAI-only. Feeds the customer's ACTUAL reference photos into gpt-image-1 so
+// the concept is visually grounded in what they sent — "close but original".
 export async function editConceptFromImages(opts: {
   apiKey: string;
   prompt: string;
@@ -333,34 +295,4 @@ export async function editConceptFromImages(opts: {
   const b64 = json.data?.[0]?.b64_json;
   if (!b64) throw new Error("OpenAI returned no image data.");
   return Buffer.from(b64, "base64");
-}
-
-// ── Key test ────────────────────────────────────────────────────────────────
-// Lightweight auth check + capability report. Lists the account's models so we
-// can tell the user whether their quoting model and gpt-image-1 are available.
-export async function testOpenAiKey(
-  apiKey: string,
-): Promise<{ ok: boolean; ids: string[]; error?: string }> {
-  let res: Response;
-  try {
-    res = await fetch("https://api.openai.com/v1/models", {
-      headers: { Authorization: `Bearer ${apiKey}` },
-    });
-  } catch (err) {
-    return { ok: false, ids: [], error: err instanceof Error ? err.message : "Network error reaching OpenAI." };
-  }
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    let msg = `OpenAI rejected the key (HTTP ${res.status}).`;
-    try {
-      const j = JSON.parse(text) as { error?: { message?: string } };
-      if (j.error?.message) msg = j.error.message;
-    } catch {
-      /* keep default */
-    }
-    return { ok: false, ids: [], error: msg };
-  }
-  const json = (await res.json()) as { data?: { id?: string }[] };
-  const ids = (json.data ?? []).map((m) => m.id).filter((x): x is string => Boolean(x));
-  return { ok: true, ids };
 }

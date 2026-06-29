@@ -6,13 +6,13 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@event/db";
 import { requireSalesRole, isSuperAdmin } from "../auth/rbac";
-import { decryptSecret } from "../crypto";
 import {
   generateQuotationDraft,
   generateConceptImage,
   editConceptFromImages,
   analyzeReferencesToBrief,
 } from "../ai/openai";
+import { resolveAiKey, resolveImageKey } from "../ai/resolve";
 import { computeTotals, unitPrice, lineTotal } from "./calc";
 import { saveUpload, saveBuffer, readUploadBytes } from "../storage";
 import { isRateLimited, recordFailure } from "../rate-limit";
@@ -23,29 +23,6 @@ const AI_IMAGE_LIMIT = { max: 12, windowMs: 15 * 60 * 1000, lockMs: 15 * 60 * 10
 
 function canAccess(user: SessionUser, companyId: string): boolean {
   return isSuperAdmin(user) || user.companyId === companyId;
-}
-
-/**
- * Resolve the OpenAI key for a company:
- *  - honour the company's aiEnabled flag (disabled → no billable calls);
- *  - if a per-company key is stored but won't decrypt, fail loudly instead of
- *    silently spending the platform-wide key (tenant-isolation leak);
- *  - only fall back to OPENAI_API_KEY when NO company key is stored.
- */
-function resolveAiKey(company: { aiEnabled: boolean; aiApiKeyEnc: string | null }):
-  | { ok: true; key: string }
-  | { ok: false; error: string } {
-  if (!company.aiEnabled) return { ok: false, error: "AI features are disabled for this company." };
-  if (company.aiApiKeyEnc) {
-    const decrypted = decryptSecret(company.aiApiKeyEnc);
-    if (!decrypted) {
-      return { ok: false, error: "Saved AI key could not be decrypted — re-enter it in company settings." };
-    }
-    return { ok: true, key: decrypted };
-  }
-  const envKey = process.env.OPENAI_API_KEY;
-  if (envKey) return { ok: true, key: envKey };
-  return { ok: false, error: "No OpenAI API key configured for this company." };
 }
 
 const LineSchema = z.object({
@@ -163,7 +140,6 @@ export async function runAiDraftAction(
 
   const keyRes = resolveAiKey(quotation.company);
   if (!keyRes.ok) return { error: keyRes.error };
-  const apiKey = keyRes.key;
 
   const lead = quotation.lead;
   const imageUrls = lead.attachments
@@ -173,8 +149,9 @@ export async function runAiDraftAction(
   let draft;
   try {
     draft = await generateQuotationDraft({
-      apiKey,
-      model: quotation.company.aiModel,
+      provider: keyRes.provider,
+      apiKey: keyRes.key,
+      model: keyRes.model,
       lead: {
         eventType: lead.eventType,
         eventDate: lead.eventDate?.toISOString().slice(0, 10) ?? null,
@@ -203,7 +180,7 @@ export async function runAiDraftAction(
         companyId: quotation.companyId,
         leadId: lead.id,
         status: "GENERATED",
-        model: quotation.company.aiModel,
+        model: keyRes.model,
         planDraft: draft.result.plan,
         materials: draft.result.materials,
         questions: draft.result.questions,
@@ -293,7 +270,7 @@ export async function generateConceptImageAction(
   });
   if (!quotation || !canAccess(user, quotation.companyId)) return { error: "Not found." };
 
-  const keyRes = resolveAiKey(quotation.company);
+  const keyRes = resolveImageKey(quotation.company);
   if (!keyRes.ok) return { error: keyRes.error };
   const apiKey = keyRes.key;
   if (isRateLimited(`ai-image:${user.id}`, AI_IMAGE_LIMIT).limited) {
@@ -357,9 +334,13 @@ export async function generateConceptFromReferencesAction(
   });
   if (!quotation || !canAccess(user, quotation.companyId)) return { error: "Not found." };
 
-  const keyRes = resolveAiKey(quotation.company);
-  if (!keyRes.ok) return { error: keyRes.error };
-  const apiKey = keyRes.key;
+  // Two keys: the text/vision provider key for the brief (may be Claude), and an
+  // OpenAI key for the renders (images are OpenAI-only). Resolve both up front so
+  // we never spend the brief call when the render step can't run.
+  const aiRes = resolveAiKey(quotation.company);
+  if (!aiRes.ok) return { error: aiRes.error };
+  const imgRes = resolveImageKey(quotation.company);
+  if (!imgRes.ok) return { error: imgRes.error };
   if (isRateLimited(`ai-image:${user.id}`, AI_IMAGE_LIMIT).limited) {
     return { error: "Too many image generations — please wait a few minutes." };
   }
@@ -396,8 +377,9 @@ export async function generateConceptFromReferencesAction(
   let brief: string;
   try {
     brief = await analyzeReferencesToBrief({
-      apiKey,
-      model: quotation.company.aiModel,
+      provider: aiRes.provider,
+      apiKey: aiRes.key,
+      model: aiRes.model,
       imageUrls: references,
       context,
       steer,
@@ -428,8 +410,8 @@ export async function generateConceptFromReferencesAction(
     angles.map((a) => {
       const prompt = `${brief}\n\nStyling variation: ${a}. Professional, photorealistic event & decoration render, beautiful lighting, high-end editorial photography. No text, no watermark, no logos.`;
       return refImages.length > 0
-        ? editConceptFromImages({ apiKey, prompt, images: refImages, size, quality: "medium" })
-        : generateConceptImage({ apiKey, prompt, size, quality: "medium" });
+        ? editConceptFromImages({ apiKey: imgRes.key, prompt, images: refImages, size, quality: "medium" })
+        : generateConceptImage({ apiKey: imgRes.key, prompt, size, quality: "medium" });
     }),
   );
 

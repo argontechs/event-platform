@@ -6,7 +6,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@event/db";
 import { requireUser, isSuperAdmin } from "../auth/rbac";
 import { encryptSecret, decryptSecret } from "../crypto";
-import { testOpenAiKey } from "../ai/openai";
+import { testAiKey } from "../ai/chat";
+import { resolveImageKey } from "../ai/resolve";
 import { CompanySchema } from "./schema";
 
 export type CompanyFormState = {
@@ -53,12 +54,14 @@ function parse(formData: FormData) {
     defaultLanguage: (str(formData, "defaultLanguage") || "EN") as "EN" | "MS" | "ZH",
     customDomains: str(formData, "customDomains"),
     aiEnabled: bool(formData, "aiEnabled"),
+    aiProvider: (str(formData, "aiProvider") || "openai") as "openai" | "anthropic",
     aiModel: str(formData, "aiModel") || "gpt-4o",
     aiApiKey: str(formData, "aiApiKey"),
     waPhoneNumberId: str(formData, "waPhoneNumberId"),
     waBusinessId: str(formData, "waBusinessId"),
     waAccessToken: str(formData, "waAccessToken"),
     waBotEnabled: bool(formData, "waBotEnabled"),
+    waBotContext: str(formData, "waBotContext"),
     termsAndConditions: str(formData, "termsAndConditions"),
     seoTitle: str(formData, "seoTitle"),
     seoDescription: str(formData, "seoDescription"),
@@ -141,10 +144,12 @@ function toData(d: Parsed, includeKey: boolean, includeDomains: boolean) {
     defaultLanguage: d.defaultLanguage,
     customDomains: domains,
     aiEnabled: d.aiEnabled,
+    aiProvider: d.aiProvider,
     aiModel: d.aiModel,
     waPhoneNumberId: d.waPhoneNumberId || null,
     waBusinessId: d.waBusinessId || null,
     waBotEnabled: d.waBotEnabled,
+    waBotContext: d.waBotContext || null,
     termsAndConditions: d.termsAndConditions || null,
     seoTitle: d.seoTitle || null,
     seoDescription: d.seoDescription || null,
@@ -221,9 +226,20 @@ export async function updateCompanyAction(
       return { error: "Domain already in use.", fieldErrors: { customDomains: `"${clash}" is already claimed by another company.` } };
     }
   }
+  const data = toData(parsed.data, Boolean(parsed.data.aiApiKey), canSetDomains);
+  // A key is bound to its provider. If the provider changed and no new key was
+  // pasted, drop the stored key so a key meant for one vendor is never sent to
+  // the other (it would leak + 401). The admin must re-enter, or fall back to env.
+  const prev = await prisma.company.findUnique({
+    where: { id: companyId },
+    select: { aiProvider: true },
+  });
+  if (prev && prev.aiProvider !== parsed.data.aiProvider && !parsed.data.aiApiKey) {
+    data.aiApiKeyEnc = null;
+  }
   await prisma.company.update({
     where: { id: companyId },
-    data: toData(parsed.data, Boolean(parsed.data.aiApiKey), canSetDomains) as never,
+    data: data as never,
   });
   revalidatePath(`/admin/companies/${companyId}`);
   revalidatePath("/admin/companies");
@@ -247,31 +263,50 @@ export async function testAiKeyAction(
     return { status: "error", message: "Not found." };
   }
 
+  const provider: "openai" | "anthropic" =
+    company.aiProvider === "anthropic" ? "anthropic" : "openai";
+  const envKey = provider === "anthropic" ? process.env.ANTHROPIC_API_KEY : process.env.OPENAI_API_KEY;
+
   // Prefer a freshly pasted key; fall back to the company's saved key. The
-  // platform-wide OPENAI_API_KEY is only ever testable by the super-admin so a
-  // tenant can never probe (or confirm the validity of) the owner's key.
+  // platform-wide env key is only ever testable by the super-admin so a tenant
+  // can never probe (or confirm the validity of) the owner's key.
   const typed = str(formData, "aiApiKey").trim();
   const key =
     typed ||
     decryptSecret(company.aiApiKeyEnc) ||
-    (isSuperAdmin(user) ? process.env.OPENAI_API_KEY : "") ||
+    (isSuperAdmin(user) ? envKey ?? "" : "") ||
     "";
   if (!key) return { status: "error", message: "Enter an API key first, or save one." };
 
-  const model = company.aiModel || "gpt-4o";
-  const res = await testOpenAiKey(key);
-  if (!res.ok) return { status: "error", message: res.error ?? "Key rejected by OpenAI." };
+  const model = company.aiModel || (provider === "anthropic" ? "claude-opus-4-8" : "gpt-4o");
+  const res = await testAiKey(provider, key);
+  if (!res.ok) return { status: "error", message: res.error ?? "Key rejected by the AI provider." };
 
   const hasChat = res.ids.includes(model);
-  const hasImage = res.ids.includes("gpt-image-1");
   const parts = [
     "✓ API key works.",
     hasChat
       ? `Quoting model "${model}" available.`
       : `⚠ Quoting model "${model}" not found on this account — check the model name.`,
-    hasImage
-      ? "Photo generator (gpt-image-1) available."
-      : "⚠ gpt-image-1 not enabled yet — image generation needs organisation verification at platform.openai.com.",
   ];
+
+  // Concept images are OpenAI-only. Report capability against the right key.
+  if (provider === "openai") {
+    parts.push(
+      res.ids.includes("gpt-image-1")
+        ? "Photo generator (gpt-image-1) available."
+        : "⚠ gpt-image-1 not enabled yet — image generation needs organisation verification at platform.openai.com.",
+    );
+  } else {
+    // This test is intentionally not aiEnabled-gated (you test a key before
+    // enabling AI), but resolveImageKey short-circuits on aiEnabled — probe with
+    // it forced so the report reflects real OpenAI-key availability.
+    const img = resolveImageKey({ ...company, aiEnabled: true });
+    parts.push(
+      img.ok
+        ? "Concept images run on a separate OpenAI key (not verified by this test)."
+        : `⚠ ${img.error}`,
+    );
+  }
   return { status: "ok", message: parts.join(" ") };
 }

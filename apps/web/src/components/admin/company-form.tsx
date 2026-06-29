@@ -42,10 +42,12 @@ const EMPTY: CompanyFormValues = {
   defaultLanguage: "EN",
   customDomains: "",
   aiEnabled: true,
+  aiProvider: "openai",
   aiModel: "gpt-4o",
   waPhoneNumberId: "",
   waBusinessId: "",
   waBotEnabled: true,
+  waBotContext: "",
   termsAndConditions: "",
   seoTitle: "",
   seoDescription: "",
@@ -192,17 +194,35 @@ export function CompanyForm({
         </label>
       </Section>
 
-      <Section title={t("AI (smart quoting)")} hint={t("OpenAI key is encrypted at rest. Leave blank to keep the existing key.")}>
+      <Section title={t("AI (smart quoting)")} hint={t("Choose OpenAI or Anthropic (Claude). The API key is encrypted at rest — leave blank to keep the existing one. Switching provider clears the saved key, so paste the new provider's key. Concept image generation always uses OpenAI.")}>
         <label className="flex items-center gap-2 text-sm sm:col-span-2">
           <input type="checkbox" name="aiEnabled" defaultChecked={v.aiEnabled} />
           <span className="text-slate-800">{t("Enable AI planning & quotation")}</span>
         </label>
-        <Field name="aiModel" label={t("AI model")} defaultValue={v.aiModel} error={fe.aiModel} />
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-slate-600">{t("AI provider")}</span>
+          <select
+            name="aiProvider"
+            defaultValue={v.aiProvider}
+            className="rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-900 outline-none focus:border-accent"
+          >
+            <option value="openai">OpenAI (GPT)</option>
+            <option value="anthropic">Anthropic (Claude)</option>
+          </select>
+        </label>
+        <Field
+          name="aiModel"
+          label={t("AI model")}
+          defaultValue={v.aiModel}
+          error={fe.aiModel}
+          placeholder="gpt-4o / claude-opus-4-8 / claude-haiku-4-5"
+        />
         <Field
           name="aiApiKey"
-          label={t("OpenAI API key")}
+          label={t("API key")}
           type="password"
-          placeholder={aiKeySet ? t("•••••••• (saved — leave blank to keep)") : "sk-…"}
+          placeholder={aiKeySet ? t("•••••••• (saved — leave blank to keep)") : "sk-… / sk-ant-…"}
+          full
         />
       </Section>
 
@@ -255,7 +275,17 @@ export function CompanyForm({
         />
         <label className="flex items-center gap-2 text-sm sm:col-span-2">
           <input type="checkbox" name="waBotEnabled" defaultChecked={v.waBotEnabled} />
-          <span className="text-slate-800">{t("Auto-reply enquiry bot (asks event questions & creates a lead)")}</span>
+          <span className="text-slate-800">{t("Auto-reply enquiry bot (answers questions & creates a lead)")}</span>
+        </label>
+        <label className="flex flex-col gap-1 text-sm sm:col-span-2">
+          <span className="text-slate-600">{t("Bot knowledge (services, pricing, FAQ)")}</span>
+          <textarea
+            name="waBotContext"
+            defaultValue={v.waBotContext}
+            rows={5}
+            placeholder={t("What the AI bot may tell customers: services, typical packages & pricing, areas covered, lead time, FAQs. With AI enabled, the bot answers from this and captures the lead. Leave blank to only collect enquiry details.")}
+            className="rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-900 outline-none focus:border-accent"
+          />
         </label>
       </Section>
 

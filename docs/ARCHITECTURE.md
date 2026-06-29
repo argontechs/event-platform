@@ -123,8 +123,9 @@ Key entities and relations:
 | `DATABASE_URL` | Postgres connection (Prisma) |
 | `AUTH_SECRET` | JWT signing — required |
 | `APP_ENCRYPTION_KEY` | AES-256-GCM key for per-company AI keys (base64, 32 bytes) |
-| `OPENAI_API_KEY` | AI fallback (per-company key preferred) |
-| `OPENAI_MODEL` | default model (e.g. `gpt-4o`) |
+| `OPENAI_API_KEY` | OpenAI AI fallback (per-company key preferred) |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) AI fallback (per-company key preferred) |
+| `OPENAI_MODEL` | unused — model comes from per-company settings (`Company.aiModel`) |
 | `SMTP_HOST/PORT/USER/PASS/FROM` | worker email sending (optional) |
 | `S3_*` | object storage (when MinIO/S3 adapter is used) |
 | `UPLOAD_DIR` | local-disk upload root (default `<cwd>/uploads`) |

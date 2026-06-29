@@ -176,8 +176,9 @@ model Company {
   // Public site
   customDomains String[] @default([])
 
-  // AI (OpenAI; key stored encrypted at rest — encryption handled in app layer)
+  // AI (OpenAI or Anthropic; key stored encrypted at rest — encryption in app layer)
   aiEnabled       Boolean @default(true)
+  aiProvider      String  @default("openai") // "openai" | "anthropic"
   aiModel         String  @default("gpt-4o")
   aiApiKeyEnc     String?
 
@@ -186,6 +187,7 @@ model Company {
   waAccessTokenEnc  String?
   waBusinessId      String?
   waBotEnabled      Boolean @default(true)
+  waBotContext      String? // free-text FAQ / services / pricing fed to the AI bot
 
   // Terms & conditions printed on quotations/invoices
   termsAndConditions String?
@@ -265,6 +267,7 @@ model WhatsappConversation {
   botActive     Boolean   @default(false)
   botStep       Int       @default(0)
   botData       Json      @default("{}")
+  botTurns      Int       @default(0) // AI-bot turns this session (drives the handoff cap)
   createdAt     DateTime  @default(now())
 
   company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)

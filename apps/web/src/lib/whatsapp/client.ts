@@ -23,6 +23,10 @@ export async function sendWhatsappText(
   if (!phoneNumberId || !token) {
     return { ok: false, error: "WhatsApp is not configured for this company." };
   }
+  // Meta rejects an empty text body — guard all callers (bot + staff inbox).
+  if (!body || !body.trim()) {
+    return { ok: false, error: "Empty message body." };
+  }
 
   // Normalise + validate the destination to E.164 digits. The inbound webhook
   // path stores `m.from` verbatim, so never trust it to be a clean number.
