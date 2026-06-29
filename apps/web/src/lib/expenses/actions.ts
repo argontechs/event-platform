@@ -57,7 +57,6 @@ export async function extractReceiptAction(
   }
   try {
     const data = await extractReceipt({
-      provider: keyRes.provider,
       apiKey: keyRes.key,
       model: keyRes.model,
       imageUrls: urls,

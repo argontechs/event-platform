@@ -176,9 +176,9 @@ model Company {
   // Public site
   customDomains String[] @default([])
 
-  // AI (OpenAI or Anthropic; key stored encrypted at rest — encryption in app layer)
+  // AI (OpenAI; key stored encrypted at rest — encryption in app layer)
   aiEnabled       Boolean @default(true)
-  aiProvider      String  @default("openai") // "openai" | "anthropic"
+  aiProvider      String  @default("openai") // vestigial — always "openai"
   aiModel         String  @default("gpt-4o")
   aiApiKeyEnc     String?
 

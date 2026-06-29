@@ -42,7 +42,6 @@ const EMPTY: CompanyFormValues = {
   defaultLanguage: "EN",
   customDomains: "",
   aiEnabled: true,
-  aiProvider: "openai",
   aiModel: "gpt-4o",
   waPhoneNumberId: "",
   waBusinessId: "",
@@ -194,34 +193,23 @@ export function CompanyForm({
         </label>
       </Section>
 
-      <Section title={t("AI (smart quoting)")} hint={t("Choose OpenAI or Anthropic (Claude). The API key is encrypted at rest — leave blank to keep the existing one. Switching provider clears the saved key, so paste the new provider's key. Concept image generation always uses OpenAI.")}>
+      <Section title={t("AI (smart quoting)")} hint={t("Powered by OpenAI. The API key is encrypted at rest — leave blank to keep the existing one. Used for quote drafting, the WhatsApp bot, receipt OCR, and concept image generation.")}>
         <label className="flex items-center gap-2 text-sm sm:col-span-2">
           <input type="checkbox" name="aiEnabled" defaultChecked={v.aiEnabled} />
           <span className="text-slate-800">{t("Enable AI planning & quotation")}</span>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-slate-600">{t("AI provider")}</span>
-          <select
-            name="aiProvider"
-            defaultValue={v.aiProvider}
-            className="rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-900 outline-none focus:border-accent"
-          >
-            <option value="openai">OpenAI (GPT)</option>
-            <option value="anthropic">Anthropic (Claude)</option>
-          </select>
         </label>
         <Field
           name="aiModel"
           label={t("AI model")}
           defaultValue={v.aiModel}
           error={fe.aiModel}
-          placeholder="gpt-4o / claude-opus-4-8 / claude-haiku-4-5"
+          placeholder="gpt-4o"
         />
         <Field
           name="aiApiKey"
-          label={t("API key")}
+          label={t("OpenAI API key")}
           type="password"
-          placeholder={aiKeySet ? t("•••••••• (saved — leave blank to keep)") : "sk-… / sk-ant-…"}
+          placeholder={aiKeySet ? t("•••••••• (saved — leave blank to keep)") : "sk-…"}
           full
         />
       </Section>

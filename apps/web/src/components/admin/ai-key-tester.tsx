@@ -18,7 +18,7 @@ export function AiKeyTester({ companyId, keySet }: { companyId: string; keySet: 
     <form action={action} className="rounded-xl border border-slate-200 bg-white p-5">
       <h2 className="text-sm font-medium text-slate-900">{t("Test AI connection")}</h2>
       <p className="text-xs text-slate-500">
-        {t("Check the saved API key works for the selected provider.")}
+        {t("Check the saved OpenAI API key works.")}
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <input

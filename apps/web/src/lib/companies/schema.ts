@@ -64,7 +64,6 @@ export const CompanySchema = z.object({
   customDomains: z.string().optional(), // comma / newline separated
 
   aiEnabled: z.boolean(),
-  aiProvider: z.enum(["openai", "anthropic"]),
   aiModel: z.string().min(1, "AI model is required"),
   aiApiKey: z.string().optional(), // plaintext; blank on update = keep existing
 

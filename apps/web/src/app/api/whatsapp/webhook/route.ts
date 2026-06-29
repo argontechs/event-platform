@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
           select: {
             id: true, name: true, quotePrefix: true, waBotEnabled: true,
             waPhoneNumberId: true, waAccessTokenEnc: true,
-            aiEnabled: true, aiProvider: true, aiModel: true, aiApiKeyEnc: true,
+            aiEnabled: true, aiModel: true, aiApiKeyEnc: true,
             waBotContext: true,
           },
         });
@@ -84,7 +84,6 @@ export async function POST(req: NextRequest) {
           waPhoneNumberId: company.waPhoneNumberId,
           waAccessTokenEnc: company.waAccessTokenEnc,
           aiEnabled: company.aiEnabled,
-          aiProvider: company.aiProvider,
           aiModel: company.aiModel,
           aiApiKeyEnc: company.aiApiKeyEnc,
           waBotContext: company.waBotContext,

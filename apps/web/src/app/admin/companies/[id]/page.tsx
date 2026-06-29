@@ -58,7 +58,6 @@ export default async function EditCompanyPage({
     defaultLanguage: c.defaultLanguage,
     customDomains: c.customDomains.join(", "),
     aiEnabled: c.aiEnabled,
-    aiProvider: c.aiProvider as "openai" | "anthropic",
     aiModel: c.aiModel,
     waPhoneNumberId: c.waPhoneNumberId ?? "",
     waBusinessId: c.waBusinessId ?? "",

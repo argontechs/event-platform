@@ -149,7 +149,6 @@ export async function runAiDraftAction(
   let draft;
   try {
     draft = await generateQuotationDraft({
-      provider: keyRes.provider,
       apiKey: keyRes.key,
       model: keyRes.model,
       lead: {
@@ -377,7 +376,6 @@ export async function generateConceptFromReferencesAction(
   let brief: string;
   try {
     brief = await analyzeReferencesToBrief({
-      provider: aiRes.provider,
       apiKey: aiRes.key,
       model: aiRes.model,
       imageUrls: references,

@@ -1,6 +1,6 @@
 import { readUploadAsDataUrl } from "../storage";
 import { AiDraftResult } from "./schema";
-import { callChat, type AiProvider, type ChatPart } from "./chat";
+import { callChat, type ChatPart } from "./chat";
 
 // Text/vision features (quote draft, reference brief, receipt OCR) dispatch
 // through callChat and run on the company's chosen provider (OpenAI or Claude).
@@ -56,7 +56,6 @@ export type DraftOutput = {
 };
 
 export async function generateQuotationDraft(opts: {
-  provider: AiProvider;
   apiKey: string;
   model: string;
   lead: LeadInfo;
@@ -77,7 +76,6 @@ export async function generateQuotationDraft(opts: {
   ];
 
   const { text, usage } = await callChat({
-    provider: opts.provider,
     apiKey: opts.apiKey,
     model: opts.model,
     system: SYSTEM,
@@ -146,7 +144,6 @@ export async function generateConceptImage(opts: {
 // Vision pass: reads the customer's uploaded reference photos + their notes,
 // then writes a vivid brief for an original-but-close concept.
 export async function analyzeReferencesToBrief(opts: {
-  provider: AiProvider;
   apiKey: string;
   model: string;
   imageUrls: string[];
@@ -169,7 +166,6 @@ export async function analyzeReferencesToBrief(opts: {
   ];
 
   const { text } = await callChat({
-    provider: opts.provider,
     apiKey: opts.apiKey,
     model: opts.model,
     system: sys,
@@ -205,7 +201,6 @@ const RECEIPT_CATEGORIES = [
 ];
 
 export async function extractReceipt(opts: {
-  provider: AiProvider;
   apiKey: string;
   model: string;
   imageUrls: string[];
@@ -225,7 +220,6 @@ total = grand total actually paid; sst = tax/SST/GST amount if shown, else 0; da
   ];
 
   const { text } = await callChat({
-    provider: opts.provider,
     apiKey: opts.apiKey,
     model: opts.model,
     system: sys,
