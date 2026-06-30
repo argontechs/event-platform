@@ -3,19 +3,23 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@event/db";
 import { requireUser, isSuperAdmin } from "@/lib/auth/rbac";
 import { PrintButton } from "@/components/admin/print-button";
-import { BusinessDocument, type DocLine, type DocRow } from "@/components/admin/business-document";
+import { BrandedDocument, type DocLine } from "@/components/admin/branded-document";
 
 export const dynamic = "force-dynamic";
 
 type CustomerSnapshot = { name?: string; email?: string; phone?: string; sstNumber?: string };
 
-function money(n: number): string {
-  return n.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
 function fmtDate(d: Date | null | undefined): string {
   if (!d) return "";
   const x = new Date(d);
-  return `${String(x.getDate()).padStart(2, "0")}/${String(x.getMonth() + 1).padStart(2, "0")}/${x.getFullYear()}`;
+  return `${x.getDate()}/${x.getMonth() + 1}/${x.getFullYear()}`;
+}
+// Template date format, e.g. "21 JUN 2026".
+function fmtDocDate(d: Date | null | undefined): string {
+  if (!d) return "";
+  return new Date(d)
+    .toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+    .toUpperCase();
 }
 
 export default async function InvoicePage({
@@ -42,31 +46,13 @@ export default async function InvoicePage({
   }));
   const cust = (inv.customerSnapshot ?? {}) as CustomerSnapshot;
 
-  const term = inv.paymentTerm || "NET30";
-  const due = new Date(inv.issuedAt);
-  due.setDate(due.getDate() + (parseInt(term.replace(/\D/g, ""), 10) || 30));
-
-  const meta: [string, string][] = [
-    ["No.", inv.number],
-    ["Date", fmtDate(inv.issuedAt)],
-    ["Payment Term", term],
-    ["Due Date", fmtDate(due)],
-    ["Prepared by", inv.preparedBy ?? ""],
-  ];
   const billLines = [
-    inv.eventDate ? `EVENT DATE : ${fmtDate(inv.eventDate)}` : null,
+    inv.eventDate ? `EVENT DATE: ${fmtDate(inv.eventDate)}` : null,
     inv.setupTime ? `EVENT SETUP TIME: ${inv.setupTime}` : null,
     inv.startTime ? `EVENT START TIME: ${inv.startTime}` : null,
     inv.dismantleTime ? `DISMANTLE TIME: ${inv.dismantleTime}` : null,
     inv.venue ? `VENUE: ${inv.venue}` : null,
   ].filter(Boolean) as string[];
-  const extraRows: DocRow[] =
-    Number(inv.amountPaid) > 0
-      ? [
-          { label: "Less: Paid", value: `-RM${money(Number(inv.amountPaid))}` },
-          { label: "Balance Due", value: `RM${money(Number(inv.balanceDue))}`, strong: true },
-        ]
-      : [];
 
   return (
     <section className="mx-auto max-w-3xl">
@@ -86,25 +72,18 @@ export default async function InvoicePage({
       </div>
 
       <div className="print-document">
-        <BusinessDocument
+        <BrandedDocument
           title="INVOICE"
           company={inv.company}
-          meta={meta}
-          customer={{ name: cust.name ?? "", phone: cust.phone ?? "" }}
+          customer={{ name: cust.name ?? "" }}
           billLines={billLines}
+          dateText={fmtDocDate(inv.issuedAt)}
+          preparedBy={inv.preparedBy ?? ""}
           items={items}
-          totals={{
-            subtotal: Number(inv.subtotal),
-            discount: Number(inv.discount),
-            sstApplied: inv.sstApplied,
-            b2bExempt: inv.b2bExempt,
-            sstRate: Number(inv.sstRate),
-            sstAmount: Number(inv.sstAmount),
-            rounding: Number(inv.rounding),
-            total: Number(inv.total),
-          }}
-          extraRows={extraRows}
-          remarks={inv.remarks}
+          subtotal={Number(inv.subtotal)}
+          grandTotal={Number(inv.total)}
+          amountPaid={Number(inv.amountPaid)}
+          balanceDue={Number(inv.balanceDue)}
         />
       </div>
     </section>
