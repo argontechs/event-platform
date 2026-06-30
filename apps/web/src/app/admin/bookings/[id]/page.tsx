@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@event/db";
 import { requireUser, isSuperAdmin } from "@/lib/auth/rbac";
 import { confirmPaymentAction } from "@/lib/bookings/actions";
+import { RecordPaymentForm } from "@/components/admin/record-payment-form";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { getBoLang } from "@/lib/i18n/bo";
 import { makeT } from "@/lib/i18n/t";
@@ -145,6 +146,18 @@ export default async function BookingDetailPage({
           ))
         )}
       </div>
+
+      {booking.payments.some((p) => p.status === "PENDING") ? null : (
+        <div className="mt-4 max-w-xl">
+          <h3 className="text-sm font-medium text-slate-900">{t("Record a payment")}</h3>
+          <p className="text-xs text-slate-500">
+            {t("Got paid by bank transfer, DuitNow or cash? Add it here — it issues/updates the invoice and starts planning.")}
+          </p>
+          <div className="mt-2">
+            <RecordPaymentForm bookingId={booking.id} defaultAmount={Number(booking.balanceDue)} />
+          </div>
+        </div>
+      )}
 
       {/* Invoices */}
       <h2 className="mt-8 text-lg font-semibold">{t("Invoices")}</h2>
