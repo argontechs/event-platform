@@ -558,6 +558,7 @@ model Invoice {
   booking   Booking?   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   quotation Quotation? @relation(fields: [quotationId], references: [id], onDelete: SetNull)
 
+  @@unique([quotationId]) // at most one invoice per quote; Postgres allows many NULLs (standalone invoices)
   @@index([companyId])
   @@index([bookingId])
 }

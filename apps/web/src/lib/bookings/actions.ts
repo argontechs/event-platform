@@ -116,14 +116,27 @@ async function applyConfirmedPayment(
   const invType = invBalance <= 0 ? "FULL" : "DEPOSIT";
   const invStatus = invBalance <= 0 ? "PAID" : "PARTIAL";
 
+  // Reuse an invoice already on this booking, OR one issued earlier from the same
+  // quotation via the "Create invoice" button (bookingId still null) — so the two
+  // paths can't produce duplicate invoices. On reuse, link it to the booking.
   const existing = await tx.invoice.findFirst({
-    where: { bookingId: args.bookingId },
+    where: q
+      ? { OR: [{ bookingId: args.bookingId }, { quotationId: q.id }] }
+      : { bookingId: args.bookingId },
     select: { id: true },
   });
   if (existing) {
     await tx.invoice.update({
       where: { id: existing.id },
-      data: { ...money, items: args.items, type: invType, status: invStatus, amountPaid: paid, balanceDue: invBalance },
+      data: {
+        ...money,
+        items: args.items,
+        type: invType,
+        status: invStatus,
+        amountPaid: paid,
+        balanceDue: invBalance,
+        bookingId: args.bookingId,
+      },
     });
     return { status: "updated" };
   }

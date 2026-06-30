@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@event/db";
+import { prisma, Prisma } from "@event/db";
 import { requireSalesRole, isSuperAdmin } from "../auth/rbac";
 import { round2, round05 } from "../quotations/calc";
 
@@ -60,18 +60,26 @@ export async function createInvoiceFromQuotationAction(
   const user = await requireSalesRole();
   const q = await prisma.quotation.findUnique({
     where: { id: quotationId },
-    include: { company: true, customer: true, items: { orderBy: { sortOrder: "asc" } } },
+    include: {
+      company: true,
+      customer: true,
+      items: { orderBy: { sortOrder: "asc" } },
+      booking: { select: { id: true } },
+    },
   });
   if (!q || !canAccess(user, q.companyId)) redirect("/admin/quotations");
 
-  const company = q.company;
-  const seqRow = await prisma.company.update({
-    where: { id: company.id },
-    data: { invoiceNextSeq: { increment: 1 } },
-    select: { invoiceNextSeq: true },
+  // Idempotent: if an invoice already exists for this quote (or for its booking,
+  // e.g. one auto-issued when a payment was confirmed), open that one instead of
+  // issuing a duplicate. ponytail: manual admin button, no lock — add a unique
+  // index on quotationId if rapid double-submit ever produces dupes in practice.
+  const existingInvoice = await prisma.invoice.findFirst({
+    where: { OR: [{ quotationId: q.id }, ...(q.booking ? [{ bookingId: q.booking.id }] : [])] },
+    select: { id: true },
   });
-  const number = `${company.invoicePrefix}-${String(seqRow.invoiceNextSeq - 1).padStart(4, "0")}`;
+  if (existingInvoice) redirect(`/admin/invoices/${existingInvoice.id}`);
 
+  const company = q.company;
   const items = q.items.map((it) => ({
     description: it.description,
     quantity: Number(it.quantity),
@@ -80,42 +88,66 @@ export async function createInvoiceFromQuotationAction(
     lineTotal: Number(it.lineTotal),
   }));
 
-  const invoice = await prisma.invoice.create({
-    data: {
-      companyId: company.id,
-      quotationId: q.id,
-      number,
-      type: "FULL",
-      status: "ISSUED",
-      customerSnapshot: q.customer
-        ? {
-            name: q.customer.name,
-            email: q.customer.email ?? undefined,
-            phone: q.customer.phone ?? undefined,
-            sstNumber: q.customer.sstNumber ?? undefined,
-          }
-        : undefined,
-      items,
-      subtotal: Number(q.subtotal),
-      discount: Number(q.discount),
-      sstApplied: q.sstApplied,
-      b2bExempt: q.b2bExempt,
-      sstRate: Number(q.sstRate),
-      sstAmount: Number(q.sstAmount),
-      rounding: round2(round05(Number(q.total)) - Number(q.total)),
-      total: round05(Number(q.total)),
-      amountPaid: 0,
-      balanceDue: round05(Number(q.total)),
-      preparedBy: q.preparedBy,
-      eventDate: q.eventDate,
-      setupTime: q.setupTime,
-      startTime: q.startTime,
-      dismantleTime: q.dismantleTime,
-      venue: q.venue,
-    },
-  });
+  // The findFirst above handles the sequential case. The real backstop against a
+  // concurrent double-submit (or a payment auto-issuing at the same instant) is
+  // the unique index on Invoice.quotationId: at most one invoice per quote.
+  // Increment the seq + create atomically so a lost race wastes no invoice number,
+  // then turn the P2002 collision into an idempotent redirect to the winner.
+  let invoiceId: string;
+  try {
+    const invoice = await prisma.$transaction(async (tx) => {
+      const seqRow = await tx.company.update({
+        where: { id: company.id },
+        data: { invoiceNextSeq: { increment: 1 } },
+        select: { invoiceNextSeq: true },
+      });
+      const number = `${company.invoicePrefix}-${String(seqRow.invoiceNextSeq - 1).padStart(4, "0")}`;
+      return tx.invoice.create({
+        data: {
+          companyId: company.id,
+          quotationId: q.id,
+          number,
+          type: "FULL",
+          status: "ISSUED",
+          customerSnapshot: q.customer
+            ? {
+                name: q.customer.name,
+                email: q.customer.email ?? undefined,
+                phone: q.customer.phone ?? undefined,
+                sstNumber: q.customer.sstNumber ?? undefined,
+              }
+            : undefined,
+          items,
+          subtotal: Number(q.subtotal),
+          discount: Number(q.discount),
+          sstApplied: q.sstApplied,
+          b2bExempt: q.b2bExempt,
+          sstRate: Number(q.sstRate),
+          sstAmount: Number(q.sstAmount),
+          rounding: round2(round05(Number(q.total)) - Number(q.total)),
+          total: round05(Number(q.total)),
+          amountPaid: 0,
+          balanceDue: round05(Number(q.total)),
+          preparedBy: q.preparedBy,
+          eventDate: q.eventDate,
+          setupTime: q.setupTime,
+          startTime: q.startTime,
+          dismantleTime: q.dismantleTime,
+          venue: q.venue,
+        },
+        select: { id: true },
+      });
+    });
+    invoiceId = invoice.id;
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      const won = await prisma.invoice.findFirst({ where: { quotationId: q.id }, select: { id: true } });
+      if (won) redirect(`/admin/invoices/${won.id}`);
+    }
+    throw e;
+  }
 
-  redirect(`/admin/invoices/${invoice.id}`);
+  redirect(`/admin/invoices/${invoiceId}`);
 }
 
 // ── Edit an issued invoice (line items, customer, SST) and recompute totals ──
