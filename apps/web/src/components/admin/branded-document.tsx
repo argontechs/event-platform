@@ -222,7 +222,7 @@ export function BrandedDocument({
 
           {/* Footer — rule sits BELOW the line, matching the PDF */}
           <div className="mt-8 flex items-end justify-between gap-6 border-b border-zinc-800 pb-3">
-            <p className={`${SERIF} text-[18px] italic text-zinc-800`}>Thank you for your business.</p>
+            <p className={`${SERIF} text-[18px] text-zinc-800`}>Thank you for your business.</p>
             {footerRight ? <p className="text-[11px] text-zinc-500">{footerRight}</p> : null}
           </div>
         </div>

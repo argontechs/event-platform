@@ -7,10 +7,7 @@ import "./globals.css";
 // quotation/invoice document to match the company's print template: titles in
 // Roxborough CF (client-licensed, self-hosted) and body text in Inter.
 const roxborough = localFont({
-  src: [
-    { path: "./fonts/RoxboroughCF-Regular.ttf", weight: "400", style: "normal" },
-    { path: "./fonts/RoxboroughCF-Italic.woff2", weight: "400", style: "italic" },
-  ],
+  src: "./fonts/RoxboroughCF-Regular.ttf",
   variable: "--font-roxborough",
   display: "swap",
 });
