@@ -130,7 +130,7 @@ export function BrandedDocument({
         ) : null}
 
         <div className="relative z-10 flex min-h-[250mm] flex-col">
-          <Header logoUrl={company.logoUrl} name={company.name} right={title} logoH="h-20" />
+          <Header logoUrl={company.logoUrl} name={company.name} right={title} logoH="h-24" />
 
           {/* Billed to + header right */}
           <div className="mt-10 flex items-start justify-between gap-6 text-[11px]">
