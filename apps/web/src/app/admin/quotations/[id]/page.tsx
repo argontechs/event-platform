@@ -9,6 +9,7 @@ import { AiGenerateButton } from "@/components/admin/ai-generate-button";
 import { QuotationImages } from "@/components/admin/quotation-images";
 import { getBoLang } from "@/lib/i18n/bo";
 import { makeT } from "@/lib/i18n/t";
+import { CopyButton } from "@/components/ui/copy-button";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,7 @@ export default async function QuotationEditorPage({
       lead: { include: { attachments: { where: { kind: "REFERENCE" }, orderBy: { createdAt: "desc" } } } },
       customer: { select: { sstNumber: true } },
       attachments: { orderBy: { createdAt: "desc" } },
+      booking: { select: { id: true } },
     },
   });
   if (!quotation) notFound();
@@ -103,6 +105,20 @@ export default async function QuotationEditorPage({
         </div>
       </div>
 
+      {quotation.status === "ACCEPTED" && quotation.booking ? (
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-emerald-300 bg-emerald-50 p-4">
+          <p className="text-sm font-medium text-emerald-800">
+            {t("Quote accepted — a booking was created.")}
+          </p>
+          <Link
+            href={`/admin/bookings/${quotation.booking.id}`}
+            className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition hover:brightness-110"
+          >
+            {t("View booking →")}
+          </Link>
+        </div>
+      ) : null}
+
       {/* Customer requested changes */}
       {quotation.changesRequested && quotation.customerFeedback ? (
         <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4">
@@ -127,6 +143,18 @@ export default async function QuotationEditorPage({
             <span className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
               {t("Access code:")} <strong className="text-slate-900">{quotation.viewPin}</strong>
             </span>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <CopyButton
+              label={t("Copy link")}
+              copiedLabel={t("Copied")}
+              text={`${process.env.APP_BASE_URL ?? ""}/q/${quotation.publicToken}`}
+            />
+            <CopyButton
+              label={t("Copy link + code")}
+              copiedLabel={t("Copied")}
+              text={`${process.env.APP_BASE_URL ?? ""}/q/${quotation.publicToken}\n${t("Access code:")} ${quotation.viewPin}`}
+            />
           </div>
         </div>
       ) : null}

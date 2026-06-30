@@ -6,6 +6,7 @@ import { createQuotationForLead } from "@/lib/quotations/actions";
 import { updateLeadStatusAction } from "@/lib/leads/actions";
 import { getBoLang } from "@/lib/i18n/bo";
 import { makeT } from "@/lib/i18n/t";
+import { CopyButton } from "@/components/ui/copy-button";
 
 const LEAD_STATUSES = ["NEW", "REVIEWING", "QUOTED", "ACCEPTED", "REJECTED", "CONVERTED", "LOST"];
 
@@ -121,6 +122,18 @@ export default async function LeadDetailPage({
             <span className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
               {t("Access code:")} <strong className="text-slate-900">{lead.uploadPin}</strong>
             </span>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <CopyButton
+              label={t("Copy link")}
+              copiedLabel={t("Copied")}
+              text={`${process.env.APP_BASE_URL ?? ""}/lead/${lead.uploadToken}`}
+            />
+            <CopyButton
+              label={t("Copy link + code")}
+              copiedLabel={t("Copied")}
+              text={`${process.env.APP_BASE_URL ?? ""}/lead/${lead.uploadToken}\n${t("Access code:")} ${lead.uploadPin}`}
+            />
           </div>
         </div>
       ) : null}

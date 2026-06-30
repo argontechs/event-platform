@@ -29,6 +29,12 @@ export async function getActiveCompanyId(user: SessionUser): Promise<string | nu
 
 export async function setActiveCompanyId(companyId: string): Promise<void> {
   const store = await cookies();
+  // Empty = "all companies" (group view): clear the cookie so getActiveCompanyId
+  // returns null cleanly instead of an empty string.
+  if (!companyId) {
+    store.delete(ACTIVE_COMPANY_COOKIE);
+    return;
+  }
   store.set(ACTIVE_COMPANY_COOKIE, companyId, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production" && process.env.COOKIE_SECURE !== "false",

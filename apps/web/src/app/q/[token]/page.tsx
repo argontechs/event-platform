@@ -7,6 +7,7 @@ import { QuoteGate } from "@/components/site/quote-gate";
 import { RequestChangesForm } from "@/components/site/request-changes-form";
 import { AcceptQuoteButton } from "@/components/site/accept-quote-button";
 import { BusinessDocument, type DocLine, type DocRow } from "@/components/admin/business-document";
+import { CopyButton } from "@/components/ui/copy-button";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +61,9 @@ export default async function PublicQuotePage({
   ];
   const accepted = q.status === "ACCEPTED";
   const sent = q.status === "SENT";
+  // Same comparison the server uses to gate acceptance (public-actions.ts), so the
+  // UI never shows an Accept button the server will silently no-op.
+  const expired = !!q.validUntil && new Date(q.validUntil) < new Date();
 
   // Formal quotation document (same layout as the printed invoice/quote).
   const eventDate = q.eventDate ?? q.lead?.eventDate ?? null;
@@ -164,6 +168,40 @@ export default async function PublicQuotePage({
                 Thanks — we&apos;ve received your change request and are preparing a revised
                 proposal. We&apos;ll send you a new link shortly.
               </p>
+            ) : expired ? (
+              <div className="mt-8 flex flex-col gap-3">
+                <div className="rounded-lg border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-200">
+                  This quote expired on {fmtDate(q.validUntil)}. Please contact us for an updated proposal.
+                  {q.company.phone || q.company.email ? (
+                    <span className="mt-1 block text-amber-200/80">
+                      Contact:
+                      {q.company.phone ? (
+                        <>
+                          {" "}
+                          <a className="underline" href={`tel:${q.company.phone}`}>
+                            {q.company.phone}
+                          </a>
+                        </>
+                      ) : null}
+                      {q.company.email ? (
+                        <>
+                          {q.company.phone ? " · " : " "}
+                          <a className="underline" href={`mailto:${q.company.email}`}>
+                            {q.company.email}
+                          </a>
+                        </>
+                      ) : null}
+                    </span>
+                  ) : (
+                    <span className="mt-1 block text-amber-200/80">
+                      Please reply to the message that sent you this link.
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <RequestChangesForm token={token} />
+                </div>
+              </div>
             ) : (
               <div className="mt-8 flex flex-col gap-3">
                 <div className="flex flex-wrap items-center gap-3">
@@ -187,13 +225,28 @@ export default async function PublicQuotePage({
                   <p className="text-xs uppercase tracking-wide text-white/40">Bank transfer</p>
                   <p className="mt-2 text-white/80">{q.company.bankName ?? "—"}</p>
                   <p className="text-white/80">{q.company.bankAccountName ?? ""}</p>
-                  <p className="text-white/80">{q.company.bankAccountNo ?? ""}</p>
+                  {q.company.bankAccountNo ? (
+                    <div className="mt-0.5 flex items-center gap-2">
+                      <p className="text-white/80">{q.company.bankAccountNo}</p>
+                      <CopyButton
+                        text={q.company.bankAccountNo}
+                        label="Copy"
+                        copiedLabel="Copied"
+                        className="rounded border border-white/15 px-2 py-0.5 text-xs text-white/70 transition hover:bg-white/10"
+                      />
+                    </div>
+                  ) : null}
                 </div>
                 <div className="rounded-lg border border-white/10 p-4 text-sm">
                   <p className="text-xs uppercase tracking-wide text-white/40">DuitNow QR</p>
                   {q.company.duitnowQrUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={q.company.duitnowQrUrl} alt="DuitNow QR" className="mt-2 h-28 w-28 rounded object-contain" />
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={q.company.duitnowQrUrl} alt="DuitNow QR" className="mt-2 h-44 w-44 rounded object-contain" />
+                      <p className="mt-2 text-xs text-white/50">
+                        Scan with your banking app to pay {rm(Number(q.depositAmount))}
+                      </p>
+                    </>
                   ) : (
                     <p className="mt-2 text-white/50">QR not configured.</p>
                   )}
@@ -220,14 +273,5 @@ export default async function PublicQuotePage({
         </>
       )}
     </main>
-  );
-}
-
-function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-white/55">{label}</span>
-      <span className={strong ? "text-lg font-semibold text-white" : "text-white/85"}>{value}</span>
-    </div>
   );
 }

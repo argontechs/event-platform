@@ -26,9 +26,13 @@ export function CompanySwitcher({
         })
       }
     >
-      <option value="" disabled>
-        {companies.length ? "Select company…" : "No companies yet"}
-      </option>
+      {companies.length ? (
+        <option value="">All companies (group view)</option>
+      ) : (
+        <option value="" disabled>
+          No companies yet
+        </option>
+      )}
       {companies.map((c) => (
         <option key={c.id} value={c.id}>
           {c.name}
