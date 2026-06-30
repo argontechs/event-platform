@@ -23,12 +23,12 @@ function money(n: number): string {
 const WATERMARK = "/brand/pe-watermark.png";
 const SERIF = "[font-family:var(--font-playfair),Georgia,serif]";
 
-function Header({ logoUrl, name, right }: { logoUrl: string | null; name: string; right: string }) {
+function Header({ logoUrl, name, right, logoH = "h-16" }: { logoUrl: string | null; name: string; right: string; logoH?: string }) {
   return (
     <div className="flex items-start justify-between gap-4">
       {logoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={logoUrl} alt={name} className="h-12 w-auto max-w-[55%] object-contain" />
+        <img src={logoUrl} alt={name} className={`${logoH} w-auto max-w-[60%] object-contain`} />
       ) : (
         <p className="text-lg font-bold uppercase text-zinc-900">{name}</p>
       )}
@@ -115,7 +115,7 @@ export function BrandedDocument({
   const terms = company.termsAndConditions;
 
   return (
-    <div className={`mx-auto w-full max-w-[820px] bg-white text-[12px] text-zinc-900 [font-family:var(--font-poppins),system-ui,sans-serif]`}>
+    <div className={`mx-auto w-full max-w-[820px] bg-white text-[12px] text-zinc-900 [font-family:var(--font-inter),system-ui,sans-serif]`}>
       {/* ───────── PAGE 1 ───────── */}
       <div className="relative overflow-hidden px-10 py-8">
         {/* watermark (quotation only) */}
@@ -130,7 +130,7 @@ export function BrandedDocument({
         ) : null}
 
         <div className="relative z-10 flex min-h-[250mm] flex-col">
-          <Header logoUrl={company.logoUrl} name={company.name} right={title} />
+          <Header logoUrl={company.logoUrl} name={company.name} right={title} logoH="h-20" />
 
           {/* Billed to + header right */}
           <div className="mt-10 flex items-start justify-between gap-6 text-[11px]">
