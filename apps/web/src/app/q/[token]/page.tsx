@@ -148,6 +148,9 @@ export default async function PublicQuotePage({
               items={docItems}
               subtotal={Number(q.subtotal)}
               grandTotal={Number(q.total)}
+              sstApplied={q.sstApplied}
+              sstRate={Number(q.sstRate)}
+              sstAmount={Number(q.sstAmount)}
             />
           </div>
 

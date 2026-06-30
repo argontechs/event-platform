@@ -85,6 +85,9 @@ export default async function QuotationPreviewPage({
           items={items}
           subtotal={Number(q.subtotal)}
           grandTotal={Number(q.total)}
+          sstApplied={q.sstApplied}
+          sstRate={Number(q.sstRate)}
+          sstAmount={Number(q.sstAmount)}
         />
 
         {images.length > 0 ? (

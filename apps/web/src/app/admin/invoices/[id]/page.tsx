@@ -73,6 +73,7 @@ export default async function InvoicePage({
         <BrandedDocument
           title="INVOICE"
           variant="invoice"
+          termsTitle=""
           company={inv.company}
           customer={{ name: cust.name ?? "", phone: cust.phone }}
           billLines={billLines}
@@ -82,6 +83,9 @@ export default async function InvoicePage({
           grandTotal={Number(inv.total)}
           amountPaid={Number(inv.amountPaid)}
           balanceDue={Number(inv.balanceDue)}
+          sstApplied={inv.sstApplied}
+          sstRate={Number(inv.sstRate)}
+          sstAmount={Number(inv.sstAmount)}
           footerRight={inv.company.ssmRegNo}
         />
       </div>

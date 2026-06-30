@@ -32,9 +32,11 @@ function Header({ logoUrl, name, right }: { logoUrl: string | null; name: string
       ) : (
         <p className="text-lg font-bold uppercase text-zinc-900">{name}</p>
       )}
-      <p className={`${SERIF} whitespace-pre-line text-right text-[30px] font-medium leading-[1.05] tracking-[0.04em] text-zinc-900`}>
-        {right}
-      </p>
+      {right ? (
+        <p className={`${SERIF} whitespace-pre-line text-right text-[30px] font-medium leading-[1.05] tracking-[0.04em] text-zinc-900`}>
+          {right}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -77,6 +79,9 @@ export function BrandedDocument({
   grandTotal,
   amountPaid = 0,
   balanceDue = 0,
+  sstApplied = false,
+  sstRate = 0,
+  sstAmount = 0,
   footerRight = null,
 }: {
   title: string; // QUOTATION | INVOICE
@@ -99,11 +104,15 @@ export function BrandedDocument({
   grandTotal: number;
   amountPaid?: number;
   balanceDue?: number;
+  sstApplied?: boolean;
+  sstRate?: number;
+  sstAmount?: number;
   footerRight?: string | null; // reg no bottom-right (invoice)
 }) {
   const payTo = company.bankAccountName || company.legalName || company.name;
   const isQuote = variant === "quotation";
-  const terms = isQuote ? company.termsAndConditions : null;
+  // Payment Details + T&C print on both the quotation and the invoice.
+  const terms = company.termsAndConditions;
 
   return (
     <div className={`mx-auto w-full max-w-[820px] bg-white text-[12px] text-zinc-900 [font-family:var(--font-poppins),system-ui,sans-serif]`}>
@@ -188,7 +197,13 @@ export function BrandedDocument({
               {company.bankAccountNo ? <p className="uppercase">{company.bankAccountNo}</p> : null}
             </div>
             <div className="w-[280px] text-[12px]">
-              {isQuote ? (
+              {sstApplied && sstAmount > 0 ? (
+                <>
+                  <TotalRow label="Subtotal" value={subtotal} />
+                  <TotalRow label={`Service Tax (${sstRate}%)`} value={sstAmount} />
+                  <TotalRow label="TOTAL :" value={grandTotal} strong />
+                </>
+              ) : isQuote ? (
                 <>
                   <TotalRow label="TOTAL:" value={subtotal} />
                   <TotalRow label="GRAND TOTAL:" value={grandTotal} strong />
