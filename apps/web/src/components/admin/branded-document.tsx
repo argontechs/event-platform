@@ -21,7 +21,7 @@ function money(n: number): string {
 
 // The "e" watermark is the Party Eventilicious brand mark (quotation only).
 const WATERMARK = "/brand/pe-watermark.png";
-const SERIF = "[font-family:var(--font-playfair),Georgia,serif]";
+const SERIF = "[font-family:var(--font-roxborough),Georgia,serif]";
 
 function Header({ logoUrl, name, right, logoH = "h-16" }: { logoUrl: string | null; name: string; right: string; logoH?: string }) {
   return (
