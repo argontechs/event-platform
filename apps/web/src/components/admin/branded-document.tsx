@@ -125,12 +125,12 @@ export function BrandedDocument({
             src={WATERMARK}
             alt=""
             aria-hidden="true"
-            className="pointer-events-none absolute bottom-[-40px] right-[-70px] z-0 w-[380px] select-none opacity-[0.06]"
+            className="pointer-events-none absolute bottom-[-30px] right-[-110px] z-0 w-[540px] select-none opacity-[0.07]"
           />
         ) : null}
 
         <div className="relative z-10 flex min-h-[250mm] flex-col">
-          <Header logoUrl={company.logoUrl} name={company.name} right={title} logoH="h-24" />
+          <Header logoUrl={company.logoUrl} name={company.name} right={title} logoH="h-20" />
 
           {/* Billed to + header right */}
           <div className="mt-10 flex items-start justify-between gap-6 text-[11px]">
@@ -220,8 +220,8 @@ export function BrandedDocument({
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="mt-8 flex items-end justify-between gap-6 border-t border-zinc-800 pt-3">
+          {/* Footer — rule sits BELOW the line, matching the PDF */}
+          <div className="mt-8 flex items-end justify-between gap-6 border-b border-zinc-800 pb-3">
             <p className={`${SERIF} text-[18px] italic text-zinc-800`}>Thank you for your business.</p>
             {footerRight ? <p className="text-[11px] text-zinc-500">{footerRight}</p> : null}
           </div>
