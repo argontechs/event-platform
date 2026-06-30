@@ -3,17 +3,19 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@event/db";
 import { requireUser, isSuperAdmin } from "@/lib/auth/rbac";
 import { PrintButton } from "@/components/admin/print-button";
-import { BusinessDocument, type DocLine, type DocRow } from "@/components/admin/business-document";
+import { BrandedDocument, type DocLine } from "@/components/admin/branded-document";
 
 export const dynamic = "force-dynamic";
 
-function money(n: number): string {
-  return n.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
 function fmtDate(d: Date | null | undefined): string {
   if (!d) return "";
   const x = new Date(d);
-  return `${String(x.getDate()).padStart(2, "0")}/${String(x.getMonth() + 1).padStart(2, "0")}/${x.getFullYear()}`;
+  return `${x.getDate()}/${x.getMonth() + 1}/${x.getFullYear()}`;
+}
+// Template date, e.g. "21 JUN 2026".
+function fmtDocDate(d: Date | null | undefined): string {
+  if (!d) return "";
+  return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }).toUpperCase();
 }
 
 export default async function QuotationPreviewPage({
@@ -46,26 +48,17 @@ export default async function QuotationPreviewPage({
   }));
 
   const eventDate = q.eventDate ?? q.lead?.eventDate ?? null;
-  const deposit = Number(q.depositAmount);
-  const balance = Number(q.total) - deposit;
-
-  const meta: [string, string][] = [
-    ["No.", q.number],
-    ["Date", fmtDate(q.createdAt)],
-    ...((q.validUntil ? [["Valid Until", fmtDate(q.validUntil)]] : []) as [string, string][]),
-    ["Prepared by", q.preparedBy ?? ""],
-  ];
   const billLines = [
-    eventDate ? `EVENT DATE : ${fmtDate(eventDate)}` : null,
+    eventDate ? `EVENT DATE: ${fmtDate(eventDate)}` : null,
     q.setupTime ? `EVENT SETUP TIME: ${q.setupTime}` : null,
     q.startTime ? `EVENT START TIME: ${q.startTime}` : null,
     q.dismantleTime ? `DISMANTLE TIME: ${q.dismantleTime}` : null,
     (q.venue ?? q.lead?.venueText) ? `VENUE: ${q.venue ?? q.lead?.venueText}` : null,
   ].filter(Boolean) as string[];
-  const extraRows: DocRow[] = [
-    { label: `Deposit (${Number(q.depositPercent)}%)`, value: `RM${money(deposit)}` },
-    { label: "Balance", value: `RM${money(balance)}`, strong: true },
-  ];
+  const headerRight = [
+    fmtDocDate(q.createdAt),
+    q.preparedBy ? `PREPARED BY: ${q.preparedBy.toUpperCase()}` : null,
+  ].filter(Boolean) as string[];
 
   const images = [
     ...q.attachments.filter((a) => a.kind === "MOODBOARD" || a.kind === "REFERENCE"),
@@ -82,25 +75,16 @@ export default async function QuotationPreviewPage({
       </div>
 
       <div className="print-document">
-        <BusinessDocument
+        <BrandedDocument
           title="QUOTATION"
+          variant="quotation"
           company={q.company}
-          meta={meta}
-          customer={{ name: q.customer?.name ?? "", phone: q.customer?.phone ?? "" }}
+          customer={{ name: q.customer?.name ?? "", phone: q.customer?.phone ?? undefined }}
           billLines={billLines}
+          headerRight={headerRight}
           items={items}
-          totals={{
-            subtotal: Number(q.subtotal),
-            discount: Number(q.discount),
-            sstApplied: q.sstApplied,
-            b2bExempt: q.b2bExempt,
-            sstRate: Number(q.sstRate),
-            sstAmount: Number(q.sstAmount),
-            rounding: 0,
-            total: Number(q.total),
-          }}
-          extraRows={extraRows}
-          remarks={q.notes}
+          subtotal={Number(q.subtotal)}
+          grandTotal={Number(q.total)}
         />
 
         {images.length > 0 ? (

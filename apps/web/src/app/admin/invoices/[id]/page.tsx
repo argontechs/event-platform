@@ -14,12 +14,10 @@ function fmtDate(d: Date | null | undefined): string {
   const x = new Date(d);
   return `${x.getDate()}/${x.getMonth() + 1}/${x.getFullYear()}`;
 }
-// Template date format, e.g. "21 JUN 2026".
-function fmtDocDate(d: Date | null | undefined): string {
+// Invoice header month-year, e.g. "MAY 2026".
+function fmtMonthYear(d: Date | null | undefined): string {
   if (!d) return "";
-  return new Date(d)
-    .toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
-    .toUpperCase();
+  return new Date(d).toLocaleDateString("en-GB", { month: "long", year: "numeric" }).toUpperCase();
 }
 
 export default async function InvoicePage({
@@ -74,16 +72,17 @@ export default async function InvoicePage({
       <div className="print-document">
         <BrandedDocument
           title="INVOICE"
+          variant="invoice"
           company={inv.company}
-          customer={{ name: cust.name ?? "" }}
+          customer={{ name: cust.name ?? "", phone: cust.phone }}
           billLines={billLines}
-          dateText={fmtDocDate(inv.issuedAt)}
-          preparedBy={inv.preparedBy ?? ""}
+          headerRight={[`INVOICE NO. ${inv.number}`, fmtMonthYear(inv.issuedAt)]}
           items={items}
           subtotal={Number(inv.subtotal)}
           grandTotal={Number(inv.total)}
           amountPaid={Number(inv.amountPaid)}
           balanceDue={Number(inv.balanceDue)}
+          footerRight={inv.company.ssmRegNo}
         />
       </div>
     </section>

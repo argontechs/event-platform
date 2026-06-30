@@ -6,7 +6,7 @@ import { PaymentProofForm } from "@/components/site/payment-proof-form";
 import { QuoteGate } from "@/components/site/quote-gate";
 import { RequestChangesForm } from "@/components/site/request-changes-form";
 import { AcceptQuoteButton } from "@/components/site/accept-quote-button";
-import { BusinessDocument, type DocLine, type DocRow } from "@/components/admin/business-document";
+import { BrandedDocument, type DocLine } from "@/components/admin/branded-document";
 import { CopyButton } from "@/components/ui/copy-button";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +21,11 @@ function fmtDate(d: Date | null | undefined): string {
   if (!d) return "";
   const x = new Date(d);
   return `${String(x.getDate()).padStart(2, "0")}/${String(x.getMonth() + 1).padStart(2, "0")}/${x.getFullYear()}`;
+}
+// Template date, e.g. "21 JUN 2026".
+function fmtDocDate(d: Date | null | undefined): string {
+  if (!d) return "";
+  return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }).toUpperCase();
 }
 
 export default async function PublicQuotePage({
@@ -76,23 +81,17 @@ export default async function PublicQuotePage({
     unitPrice: Number(it.unitPrice),
     lineTotal: Number(it.lineTotal),
   }));
-  const docMeta: [string, string][] = [
-    ["No.", q.number],
-    ["Date", fmtDate(q.createdAt)],
-    ...((q.validUntil ? [["Valid Until", fmtDate(q.validUntil)]] : []) as [string, string][]),
-    ["Prepared by", q.preparedBy ?? ""],
-  ];
+  const docHeaderRight = [
+    fmtDocDate(q.createdAt),
+    q.preparedBy ? `PREPARED BY: ${q.preparedBy.toUpperCase()}` : null,
+  ].filter(Boolean) as string[];
   const docBillLines = [
-    eventDate ? `EVENT DATE : ${fmtDate(eventDate)}` : null,
+    eventDate ? `EVENT DATE: ${fmtDate(eventDate)}` : null,
     q.setupTime ? `EVENT SETUP TIME: ${q.setupTime}` : null,
     q.startTime ? `EVENT START TIME: ${q.startTime}` : null,
     q.dismantleTime ? `DISMANTLE TIME: ${q.dismantleTime}` : null,
     venue ? `VENUE: ${venue}` : null,
   ].filter(Boolean) as string[];
-  const docExtraRows: DocRow[] = [
-    { label: `Deposit (${Number(q.depositPercent)}%)`, value: `RM${money(deposit)}` },
-    { label: "Balance", value: `RM${money(Number(q.total) - deposit)}`, strong: true },
-  ];
 
   return (
     <main
@@ -139,25 +138,16 @@ export default async function PublicQuotePage({
 
           {/* Formal quotation document */}
           <div className="mt-8 overflow-hidden rounded-xl shadow-2xl shadow-black/30">
-            <BusinessDocument
+            <BrandedDocument
               title="QUOTATION"
+              variant="quotation"
               company={q.company}
-              meta={docMeta}
-              customer={{ name: q.customer?.name ?? "", phone: q.customer?.phone ?? "" }}
+              customer={{ name: q.customer?.name ?? "", phone: q.customer?.phone ?? undefined }}
               billLines={docBillLines}
+              headerRight={docHeaderRight}
               items={docItems}
-              totals={{
-                subtotal: Number(q.subtotal),
-                discount: Number(q.discount),
-                sstApplied: q.sstApplied,
-                b2bExempt: q.b2bExempt,
-                sstRate: Number(q.sstRate),
-                sstAmount: Number(q.sstAmount),
-                rounding: 0,
-                total: Number(q.total),
-              }}
-              extraRows={docExtraRows}
-              remarks={q.notes}
+              subtotal={Number(q.subtotal)}
+              grandTotal={Number(q.total)}
             />
           </div>
 

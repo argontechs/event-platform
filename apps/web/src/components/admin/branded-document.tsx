@@ -1,8 +1,11 @@
-// Branded A4 quotation/invoice document — replicates the company's print template
-// (Party Eventilicious): logo + serif title, BILLED TO block, full-height-divider
-// items table, watermark, PLEASE MAKE PAYMENT TO + TOTAL/GRAND TOTAL, then the
-// T&C pages (page 2–3). Prints via .print-document; the T&C header repeats on each
-// printed page using a <thead> (the standard print running-header trick).
+// Branded A4 document — two variants matching the company's two reference designs:
+//   - "invoice"   (Image #4):    no watermark, no T&C, single TOTAL, reg-no footer,
+//                                 "INVOICE NO. … / month-year" on the right.
+//   - "quotation" (Jasleen PDF):  faint "e" watermark, T&C pages 2–3, TOTAL + GRAND
+//                                 TOTAL, "date / PREPARED BY" on the right.
+// Shared: logo + serif title (Playfair), BILLED TO block, full-height-divider items
+// table, PLEASE MAKE PAYMENT TO, "Thank you" footer. Prints A4 via .print-document;
+// the T&C header repeats per printed page using a <thead> running-header.
 
 export type DocLine = {
   description: string;
@@ -16,9 +19,7 @@ function money(n: number): string {
   return n.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// The "e" watermark is the Party Eventilicious brand mark. Both current tenants
-// share this brand; if a non-PE company is ever onboarded, give it its own
-// watermark (or gate this) — see the project notes.
+// The "e" watermark is the Party Eventilicious brand mark (quotation only).
 const WATERMARK = "/brand/pe-watermark.png";
 const SERIF = "[font-family:var(--font-playfair),Georgia,serif]";
 
@@ -65,19 +66,21 @@ function renderTerms(text: string) {
 
 export function BrandedDocument({
   title,
+  variant,
   termsTitle = "DESIGN\nPROPOSAL",
   company,
   customer,
   billLines,
-  dateText,
-  preparedBy,
+  headerRight,
   items,
   subtotal,
   grandTotal,
   amountPaid = 0,
   balanceDue = 0,
+  footerRight = null,
 }: {
   title: string; // QUOTATION | INVOICE
+  variant: "invoice" | "quotation";
   termsTitle?: string;
   company: {
     name: string;
@@ -88,100 +91,111 @@ export function BrandedDocument({
     bankAccountNo: string | null;
     termsAndConditions: string | null;
   };
-  customer: { name: string };
+  customer: { name: string; phone?: string };
   billLines: string[];
-  dateText: string;
-  preparedBy: string;
+  headerRight: string[]; // right-aligned header lines (date/prepared-by or invoice-no/month)
   items: DocLine[];
   subtotal: number;
   grandTotal: number;
   amountPaid?: number;
   balanceDue?: number;
+  footerRight?: string | null; // reg no bottom-right (invoice)
 }) {
   const payTo = company.bankAccountName || company.legalName || company.name;
+  const isQuote = variant === "quotation";
+  const terms = isQuote ? company.termsAndConditions : null;
 
   return (
     <div className={`mx-auto w-full max-w-[820px] bg-white text-[12px] text-zinc-900 [font-family:var(--font-poppins),system-ui,sans-serif]`}>
       {/* ───────── PAGE 1 ───────── */}
-      <div className="relative overflow-hidden px-10 py-10">
-        {/* watermark */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={WATERMARK}
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none absolute bottom-[-40px] right-[-70px] z-0 w-[380px] select-none opacity-[0.06]"
-        />
+      <div className="relative overflow-hidden px-10 py-8">
+        {/* watermark (quotation only) */}
+        {isQuote ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={WATERMARK}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none absolute bottom-[-40px] right-[-70px] z-0 w-[380px] select-none opacity-[0.06]"
+          />
+        ) : null}
 
-        <div className="relative z-10">
+        <div className="relative z-10 flex min-h-[250mm] flex-col">
           <Header logoUrl={company.logoUrl} name={company.name} right={title} />
 
-          {/* Billed to + date / prepared by */}
+          {/* Billed to + header right */}
           <div className="mt-10 flex items-start justify-between gap-6 text-[11px]">
             <div>
               <p className="tracking-[0.06em] text-zinc-500">BILLED TO:</p>
               <p className="mt-1 text-[13px] font-bold uppercase">{customer.name || "—"}</p>
+              {customer.phone ? <p className="text-[12px] font-bold text-zinc-800">{customer.phone}</p> : null}
               <div className="mt-1 space-y-0.5 uppercase leading-relaxed text-zinc-700">
                 {billLines.map((l, i) => (
                   <p key={i}>{l}</p>
                 ))}
               </div>
             </div>
-            <div className="whitespace-nowrap pt-6 text-right text-[12px] text-zinc-800">
-              <p>{dateText}</p>
-              {preparedBy ? <p>PREPARED BY: {preparedBy.toUpperCase()}</p> : null}
+            <div className={`whitespace-nowrap text-right text-[12px] text-zinc-800 ${isQuote ? "pt-6" : ""}`}>
+              {headerRight.map((l, i) => (
+                <p key={i}>{l}</p>
+              ))}
             </div>
           </div>
 
-          {/* Items table — full-height column dividers */}
-          <table className="mt-8 w-full border-collapse text-[11px]">
-            <colgroup>
-              <col />
-              <col className="w-[3.5rem]" />
-              <col className="w-[6rem]" />
-              <col className="w-[7rem]" />
-            </colgroup>
-            <thead>
-              <tr className="border-b-2 border-zinc-800 text-[12px] font-bold">
-                <th className="px-3 pb-2 text-center">DESCRIPTION</th>
-                <th className="px-3 pb-2 text-center">QTY</th>
-                <th className="px-3 pb-2 text-right">RATE</th>
-                <th className="px-3 pb-2 text-right">AMOUNT (RM)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((it, i) => (
-                <tr key={i} className="align-top">
-                  <td className="border-l border-zinc-400 px-3 py-3 uppercase">{it.description}</td>
-                  <td className="border-l border-zinc-400 px-3 py-3 text-center">{it.quantity}</td>
-                  <td className="border-l border-zinc-400 px-3 py-3 text-right">{money(it.unitPrice)}</td>
-                  <td className="border-x border-zinc-400 px-3 py-3 text-right">{money(it.lineTotal)}</td>
+          {/* Items table — grows to fill the page; full-height column dividers */}
+          <div className="relative mt-8 flex-1">
+            <table className="absolute inset-0 h-full w-full border-collapse text-[11px]">
+              <colgroup>
+                <col />
+                <col className="w-[3.5rem]" />
+                <col className="w-[6rem]" />
+                <col className="w-[7rem]" />
+              </colgroup>
+              <thead>
+                <tr className="border-b-2 border-zinc-800 text-[12px] font-bold">
+                  <th className="px-3 pb-2 text-center">DESCRIPTION</th>
+                  <th className="px-3 pb-2 text-center">QTY</th>
+                  <th className="px-3 pb-2 text-right">RATE</th>
+                  <th className="px-3 pb-2 text-right">AMOUNT (RM)</th>
                 </tr>
-              ))}
-              {/* filler row → tall body with the dividers running full height */}
-              <tr aria-hidden="true">
-                <td className="h-[300px] border-l border-b border-zinc-400" />
-                <td className="border-l border-b border-zinc-400" />
-                <td className="border-l border-b border-zinc-400" />
-                <td className="border-x border-b border-zinc-400" />
-              </tr>
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {items.map((it, i) => (
+                  <tr key={i} className="align-top">
+                    <td className="whitespace-pre-line border-l border-zinc-400 px-3 py-3 uppercase">{it.description}</td>
+                    <td className="border-l border-zinc-400 px-3 py-3 text-center">{it.quantity}</td>
+                    <td className="border-l border-zinc-400 px-3 py-3 text-right">{money(it.unitPrice)}</td>
+                    <td className="border-x border-zinc-400 px-3 py-3 text-right">{money(it.lineTotal)}</td>
+                  </tr>
+                ))}
+                {/* filler row absorbs the remaining height so the dividers run full */}
+                <tr aria-hidden="true" className="h-full">
+                  <td className="border-l border-b border-zinc-400" />
+                  <td className="border-l border-b border-zinc-400" />
+                  <td className="border-l border-b border-zinc-400" />
+                  <td className="border-x border-b border-zinc-400" />
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
           {/* Payment to + totals */}
           <div className="mt-7 flex items-start justify-between gap-6">
             <div className="text-[12px] leading-relaxed">
               <p className="font-bold">PLEASE MAKE PAYMENT TO:</p>
               <p className="uppercase">{payTo}</p>
-              {company.bankName || company.bankAccountNo ? (
-                <p className="uppercase">
-                  {[company.bankName, company.bankAccountNo].filter(Boolean).join(" ")}
-                </p>
-              ) : null}
+              {company.bankName ? <p className="uppercase">{company.bankName}</p> : null}
+              {company.bankAccountNo ? <p className="uppercase">{company.bankAccountNo}</p> : null}
             </div>
             <div className="w-[280px] text-[12px]">
-              <TotalRow label="TOTAL:" value={subtotal} />
-              <TotalRow label="GRAND TOTAL:" value={grandTotal} strong />
+              {isQuote ? (
+                <>
+                  <TotalRow label="TOTAL:" value={subtotal} />
+                  <TotalRow label="GRAND TOTAL:" value={grandTotal} strong />
+                </>
+              ) : (
+                <TotalRow label="TOTAL :" value={grandTotal} strong />
+              )}
               {amountPaid > 0 ? (
                 <>
                   <TotalRow label="LESS: PAID:" value={-amountPaid} />
@@ -192,14 +206,15 @@ export function BrandedDocument({
           </div>
 
           {/* Footer */}
-          <div className="mt-12 border-t border-zinc-800 pt-3">
+          <div className="mt-8 flex items-end justify-between gap-6 border-t border-zinc-800 pt-3">
             <p className={`${SERIF} text-[18px] italic text-zinc-800`}>Thank you for your business.</p>
+            {footerRight ? <p className="text-[11px] text-zinc-500">{footerRight}</p> : null}
           </div>
         </div>
       </div>
 
-      {/* ───────── PAGE 2–3 : Terms & Conditions ───────── */}
-      {company.termsAndConditions ? (
+      {/* ───────── PAGE 2–3 : Terms & Conditions (quotation only) ───────── */}
+      {terms ? (
         <table className="page-break w-full">
           <thead>
             <tr>
@@ -213,9 +228,7 @@ export function BrandedDocument({
           <tbody>
             <tr>
               <td className="px-10 pb-10 align-top">
-                <div className="text-[11px] leading-relaxed text-zinc-800">
-                  {renderTerms(company.termsAndConditions)}
-                </div>
+                <div className="text-[11px] leading-relaxed text-zinc-800">{renderTerms(terms)}</div>
               </td>
             </tr>
           </tbody>
