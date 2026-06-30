@@ -165,6 +165,14 @@ export async function updateInvoiceAction(
     return { error: "Not found." };
   }
 
+  const number = String(formData.get("number") ?? "").trim();
+  if (!number) return { error: "Invoice number cannot be empty." };
+  if (number.length > 50) return { error: "Invoice number is too long (max 50 characters)." };
+  if (number !== inv.number) {
+    const clash = await prisma.invoice.findFirst({ where: { number, NOT: { id: invoiceId } }, select: { id: true } });
+    if (clash) return { error: "That invoice number is already used by another invoice." };
+  }
+
   let rawItems;
   try {
     rawItems = z.array(ItemSchema).parse(JSON.parse(String(formData.get("items") ?? "[]")));
@@ -211,6 +219,7 @@ export async function updateInvoiceAction(
   await prisma.invoice.update({
     where: { id: invoiceId },
     data: {
+      number,
       items,
       customerSnapshot: customer,
       subtotal,

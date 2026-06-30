@@ -46,6 +46,7 @@ export default async function InvoiceEditPage({
         sstRegistered={inv.company.sstRegistered}
         amountPaid={Number(inv.amountPaid)}
         initial={{
+          number: inv.number,
           lines,
           sstApplied: inv.sstApplied,
           b2bExempt: inv.b2bExempt,

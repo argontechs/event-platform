@@ -170,6 +170,7 @@ const ZH: Record<string, string> = {
   "Deposit": "订金",
   "Balance": "余额",
   "Event & document details": "活动与单据详情",
+  "Invoice number": "发票编号",
   "Prepared by": "制单人",
   "Event date": "活动日期",
   "Setup time": "布置时间",

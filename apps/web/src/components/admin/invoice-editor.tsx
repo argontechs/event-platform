@@ -30,6 +30,7 @@ export function InvoiceEditor({
   sstRegistered: boolean;
   amountPaid: number;
   initial: {
+    number: string;
     lines: InvoiceLine[];
     sstApplied: boolean;
     b2bExempt: boolean;
@@ -110,6 +111,10 @@ export function InvoiceEditor({
       {/* Event & document details */}
       <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-3">
         <p className="text-sm font-medium text-slate-900 sm:col-span-3">{t("Event & document details")}</p>
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-slate-600">{t("Invoice number")}</span>
+          <input name="number" defaultValue={initial.number} className={txt} required maxLength={50} />
+        </label>
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-slate-600">{t("Prepared by")}</span>
           <input name="preparedBy" defaultValue={initial.doc.preparedBy} className={txt} />
