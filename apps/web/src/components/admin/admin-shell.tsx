@@ -63,6 +63,14 @@ export function AdminShell({
             )}
           </div>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            {user.role !== "PLANNER" ? (
+              <Link
+                href="/admin/account"
+                className="rounded-md border border-slate-200 px-3 py-1.5 text-sm text-slate-700 transition hover:bg-slate-100"
+              >
+                {t("Account", "账户")}
+              </Link>
+            ) : null}
             <Link
               href="/admin/handbook"
               className="rounded-md border border-slate-200 px-3 py-1.5 text-sm text-slate-700 transition hover:bg-slate-100"

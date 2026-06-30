@@ -2,6 +2,7 @@ import { prisma } from "@event/db";
 import { requireUser, isSuperAdmin } from "@/lib/auth/rbac";
 import { getActiveCompanyId } from "@/lib/tenant";
 import { UserCreateForm } from "@/components/admin/user-create-form";
+import { ResetPasswordForm } from "@/components/admin/reset-password-form";
 import { updateUserAction } from "@/lib/users/actions";
 import { getBoLang } from "@/lib/i18n/bo";
 import { makeT } from "@/lib/i18n/t";
@@ -76,6 +77,7 @@ export default async function UsersPage() {
                   <td className="px-4 py-3 text-slate-600">{u.company?.name ?? "— group —"}</td>
                 ) : null}
                 <td className="px-4 py-3">
+                  <div className="flex flex-col items-start gap-2">
                   <form action={updateUserAction.bind(null, u.id)} className="flex flex-wrap items-center gap-2">
                     <select
                       name="role"
@@ -100,6 +102,8 @@ export default async function UsersPage() {
                       {t("Save")}
                     </button>
                   </form>
+                  {u.id !== me.id ? <ResetPasswordForm userId={u.id} /> : null}
+                  </div>
                 </td>
               </tr>
             ))}

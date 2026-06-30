@@ -4,9 +4,10 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@event/db";
 import { requireUser, isSuperAdmin } from "../auth/rbac";
-import { hashPassword } from "../auth/password";
+import { hashPassword, verifyPassword } from "../auth/password";
 import { getActiveCompanyId } from "../tenant";
-import type { SessionUser } from "../auth/session";
+import { createSession, type SessionUser, type Role } from "../auth/session";
+import { isRateLimited, recordFailure, clearAttempts } from "../rate-limit";
 
 export type UserFormState = { error: string; ok?: boolean };
 
@@ -88,21 +89,80 @@ export async function updateUserAction(userId: string, formData: FormData): Prom
   revalidatePath("/admin/users");
 }
 
-/** Reset a staff member's password. */
-export async function resetPasswordAction(userId: string, formData: FormData): Promise<void> {
+export type ResetPwState = { error: string; ok?: boolean };
+
+/**
+ * Admin resets ANOTHER staff member's password. (Changing your own password is
+ * done at /admin/account, which re-issues your session — resetting your own here
+ * would silently log you out.) Bumps tokenVersion so the target's sessions are
+ * invalidated immediately.
+ */
+export async function resetPasswordAction(
+  userId: string,
+  _prev: ResetPwState,
+  formData: FormData,
+): Promise<ResetPwState> {
   const me = await requireUser();
+  if (userId === me.id) {
+    return { error: "Use Account → Change password to change your own password." };
+  }
   const target = await prisma.user.findUnique({ where: { id: userId } });
-  if (!target) return;
+  if (!target) return { error: "User not found." };
   const canManage =
     isSuperAdmin(me) || (me.role === "COMPANY_ADMIN" && me.companyId === target.companyId);
-  if (!canManage) return;
+  if (!canManage) return { error: "You don't have permission to reset this password." };
   const password = String(formData.get("password") ?? "");
-  if (password.length < 8) return;
-  // Bump tokenVersion so every outstanding session for this user is invalidated
-  // on password reset — a leaked/old token stops working immediately.
+  if (password.length < 8) return { error: "Password must be at least 8 characters." };
+
   await prisma.user.update({
     where: { id: userId },
     data: { passwordHash: await hashPassword(password), tokenVersion: { increment: 1 } },
   });
   revalidatePath("/admin/users");
+  return { error: "", ok: true };
+}
+
+export type ChangePwState = { error: string; ok?: boolean };
+
+/** A logged-in user changes their OWN password (current → new). */
+export async function changeMyPasswordAction(
+  _prev: ChangePwState,
+  formData: FormData,
+): Promise<ChangePwState> {
+  const me = await requireUser();
+  const key = `pwchange:${me.id}`;
+  const rl = isRateLimited(key);
+  if (rl.limited) return { error: `Too many attempts — try again in ${rl.retryAfterSec}s.` };
+
+  const current = String(formData.get("currentPassword") ?? "");
+  const next = String(formData.get("newPassword") ?? "");
+  const confirm = String(formData.get("confirmPassword") ?? "");
+  if (next.length < 8) return { error: "New password must be at least 8 characters." };
+  if (next !== confirm) return { error: "New passwords don't match." };
+  if (next === current) return { error: "New password must be different from the current one." };
+
+  const row = await prisma.user.findUnique({ where: { id: me.id }, select: { passwordHash: true } });
+  if (!row) return { error: "Account not found." };
+  if (!(await verifyPassword(current, row.passwordHash))) {
+    recordFailure(key);
+    return { error: "Current password is incorrect." };
+  }
+
+  // New hash + tokenVersion bump (logs out every OTHER session). Then re-issue
+  // THIS device's cookie with the new tokenVersion so the user stays signed in.
+  const updated = await prisma.user.update({
+    where: { id: me.id },
+    data: { passwordHash: await hashPassword(next), tokenVersion: { increment: 1 } },
+    select: { id: true, email: true, name: true, role: true, companyId: true, tokenVersion: true },
+  });
+  await createSession({
+    id: updated.id,
+    email: updated.email,
+    name: updated.name,
+    role: updated.role as Role,
+    companyId: updated.companyId,
+    tokenVersion: updated.tokenVersion,
+  });
+  clearAttempts(key);
+  return { error: "", ok: true };
 }
