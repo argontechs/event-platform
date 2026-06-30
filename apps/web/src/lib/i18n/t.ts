@@ -375,6 +375,11 @@ const ZH: Record<string, string> = {
   "Create invoice": "生成发票",
   "Resend (new code)": "重新发送（新验证码）",
   "Send proposal": "发送提案",
+  "Import quote": "导入报价",
+  "Reading…": "读取中…",
+  "Imported": "已导入",
+  "Upload a photo/screenshot of an existing quote — AI reads the items in.":
+    "上传现有报价单的照片或截图 — AI 自动读取项目。",
   "Customer requested changes": "客户要求修改",
   "revision": "修订版",
   "Their feedback is pre-filled in the AI prompt below — click Generate to redesign, then Resend.": "客户反馈已预填到下方的 AI 提示中——点击“生成”重新设计，然后重新发送。",

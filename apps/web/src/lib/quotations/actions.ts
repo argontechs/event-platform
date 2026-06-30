@@ -11,6 +11,7 @@ import {
   generateConceptImage,
   editConceptFromImages,
   analyzeReferencesToBrief,
+  extractQuotationItems,
 } from "../ai/openai";
 import { resolveAiKey, resolveImageKey } from "../ai/resolve";
 import { computeTotals, unitPrice, lineTotal } from "./calc";
@@ -601,6 +602,75 @@ export async function sendQuotationAction(
   }
 
   revalidatePath(`/admin/quotations/${quotationId}`);
+}
+
+// ── Import line items from an uploaded quotation image (AI vision OCR) ──
+export type ImportQuotationState = { error: string; ok?: boolean; count?: number };
+
+/**
+ * OCR an uploaded quotation/invoice IMAGE and APPEND its line items to this
+ * quotation. Non-destructive — the user reviews/edits in the editor, then sends.
+ * Image-only (saveUpload allowlist rejects non-images); a PDF must be screenshotted.
+ * Imported price is treated as the selling rate (costPrice = rate, 0% markup).
+ */
+export async function importQuotationFromFileAction(
+  quotationId: string,
+  _prev: ImportQuotationState,
+  formData: FormData,
+): Promise<ImportQuotationState> {
+  const user = await requireSalesRole();
+  const quotation = await prisma.quotation.findUnique({
+    where: { id: quotationId },
+    select: { id: true, companyId: true },
+  });
+  if (!quotation || !canAccess(user, quotation.companyId)) return { error: "Quotation not found." };
+
+  const files = formData
+    .getAll("file")
+    .filter((f): f is File => f instanceof File && f.size > 0);
+  if (files.length === 0) return { error: "Choose a quotation image to import." };
+
+  const urls: string[] = [];
+  for (const f of files) {
+    const stored = await saveUpload(quotation.companyId, f);
+    if (stored) urls.push(stored.url);
+  }
+  if (urls.length === 0) return { error: "Upload failed — use a clear JPG or PNG image." };
+
+  const company = await prisma.company.findUnique({ where: { id: quotation.companyId } });
+  const keyRes = company ? resolveAiKey(company) : ({ ok: false, error: "" } as const);
+  if (!keyRes.ok) return { error: keyRes.error || "AI is not configured for this company." };
+
+  let items;
+  try {
+    items = await extractQuotationItems({ apiKey: keyRes.key, model: keyRes.model, imageUrls: urls });
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Could not read the quotation image." };
+  }
+  if (items.length === 0) return { error: "No line items could be read from that image." };
+
+  // Append after any existing items (sortOrder continues the sequence).
+  const existing = await prisma.quotationItem.count({ where: { quotationId } });
+  await prisma.quotationItem.createMany({
+    data: items.map((it, i) => ({
+      quotationId,
+      companyId: quotation.companyId,
+      description: it.description,
+      category: null,
+      quantity: it.quantity,
+      unit: it.unit || "unit",
+      costPrice: it.unitPrice,
+      profitPercent: 0,
+      unitPrice: unitPrice(it.unitPrice, 0),
+      lineTotal: lineTotal(it.quantity, it.unitPrice, 0),
+      referenceImageUrl: null,
+      sortOrder: existing + i,
+    })),
+  });
+
+  await recomputeQuotation(quotationId);
+  revalidatePath(`/admin/quotations/${quotationId}`);
+  return { error: "", ok: true, count: items.length };
 }
 
 // ── Recompute & persist totals from stored line items ──
