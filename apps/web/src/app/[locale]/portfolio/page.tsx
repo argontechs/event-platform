@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { prisma } from "@event/db";
@@ -34,14 +35,23 @@ export default async function PortfolioPage({
       <p className="mt-3 text-white/60">{dict.showcase.subtitle}</p>
 
       {images.length === 0 ? (
-        <div className="mt-12 columns-1 gap-4 sm:columns-2 lg:columns-3 [&>*]:mb-4">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <div
-              key={i}
-              className="break-inside-avoid rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-transparent"
-              style={{ height: 180 + ((i * 47) % 160) }}
-            />
-          ))}
+        <div className="mt-12 max-w-xl rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+          <p className="text-white/60">{dict.showcase.emptyBody}</p>
+          <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+            {company?.instagramUrl ? (
+              <a
+                href={company.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sky-300 hover:underline"
+              >
+                {dict.showcase.emptyInstagram} →
+              </a>
+            ) : null}
+            <Link href={`/${locale}/packages`} className="text-sky-300 hover:underline">
+              {dict.showcase.emptyPackages} →
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="mt-12 columns-1 gap-4 sm:columns-2 lg:columns-3 [&>*]:mb-4">
@@ -50,7 +60,7 @@ export default async function PortfolioPage({
             <img
               key={img.id}
               src={img.url}
-              alt={img.filename ?? "portfolio"}
+              alt={dict.showcase.imageAlt.replace("{company}", company?.name ?? "")}
               className="w-full break-inside-avoid rounded-2xl border border-white/10 object-cover"
             />
           ))}

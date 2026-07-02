@@ -24,7 +24,14 @@ export interface Dictionary {
     subtitle: string;
     items: { title: string; desc: string }[];
   };
-  showcase: { title: string; subtitle: string };
+  showcase: {
+    title: string;
+    subtitle: string;
+    emptyBody: string;
+    emptyInstagram: string;
+    emptyPackages: string;
+    imageAlt: string;
+  };
   about: { title: string; body: string };
   contact: { title: string; subtitle: string; cta: string };
   footer: { tagline: string; rights: string };

@@ -26,7 +26,11 @@
   },
   "showcase": {
     "title": "精选作品",
-    "subtitle": "近期活动一瞥。"
+    "subtitle": "近期活动一瞥。",
+    "emptyBody": "作品集正在整理中——近期活动的照片即将上线。",
+    "emptyInstagram": "前往 Instagram 查看我们的最新作品",
+    "emptyPackages": "浏览我们的配套",
+    "imageAlt": "{company} 活动布置"
   },
   "about": {
     "title": "细节之美",

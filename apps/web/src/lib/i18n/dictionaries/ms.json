@@ -26,7 +26,11 @@
   },
   "showcase": {
     "title": "Karya pilihan",
-    "subtitle": "Sekilas acara terkini yang kami realisasikan."
+    "subtitle": "Sekilas acara terkini yang kami realisasikan.",
+    "emptyBody": "Galeri kami sedang disusun — foto daripada acara terkini akan menyusul.",
+    "emptyInstagram": "Lihat hasil kerja terkini kami di Instagram",
+    "emptyPackages": "Lihat pakej kami",
+    "imageAlt": "Gubahan acara oleh {company}"
   },
   "about": {
     "title": "Direka dengan teliti",
