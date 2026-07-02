@@ -15,12 +15,12 @@ export default async function LoginPage({
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(60% 60% at 25% 15%, rgba(37,99,235,0.35), transparent 60%), radial-gradient(55% 55% at 85% 90%, rgba(14,116,233,0.30), transparent 60%), #060c1c",
+            "radial-gradient(60% 60% at 25% 15%, var(--brand-wash-1-strong, rgba(37,99,235,0.35)), transparent 60%), radial-gradient(55% 55% at 85% 90%, var(--brand-wash-2-strong, rgba(14,116,233,0.30)), transparent 60%), #060c1c",
         }}
       />
       <div className="relative w-full max-w-md">
         <div className="mb-6 text-center">
-          <p className="text-xs uppercase tracking-[0.35em] text-sky-300">
+          <p className="text-xs uppercase tracking-[0.35em] text-[color:var(--brand-soft,#7dd3fc)]">
             Back Office
           </p>
           <h1 className="mt-2 text-3xl font-semibold text-white">

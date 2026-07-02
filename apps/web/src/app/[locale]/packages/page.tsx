@@ -106,7 +106,7 @@ export default async function PackagesPage({
       <Pager page={page} pages={pages} base={`/${locale}/packages`} />
 
       <div className="mt-14">
-        <Link href={`/${locale}/contact`} className="rounded-full px-6 py-3 font-medium text-white shadow-lg shadow-blue-500/30 transition hover:-translate-y-0.5 hover:brightness-110" style={{ backgroundColor: "var(--brand, #2f6fed)" }}>
+        <Link href={`/${locale}/contact`} className="rounded-full px-6 py-3 font-medium text-white shadow-lg shadow-[color:var(--brand-glow,rgba(59,130,246,0.3))] transition hover:-translate-y-0.5 hover:brightness-110" style={{ backgroundColor: "var(--brand, #2f6fed)" }}>
           Enquire now
         </Link>
       </div>
@@ -176,9 +176,9 @@ function Inclusions({ description }: { description: string | null }) {
 function Price({ price, originalPrice }: { price: unknown; originalPrice: unknown }) {
   const p = Number(price);
   const op = originalPrice == null ? 0 : Number(originalPrice);
-  if (p <= 0) return <p className="whitespace-nowrap text-xs uppercase tracking-wide text-sky-300/70">Included</p>;
+  if (p <= 0) return <p className="whitespace-nowrap text-xs uppercase tracking-wide text-[color:var(--brand-soft-muted,rgba(125,211,252,0.7))]">Included</p>;
   return (
-    <p className="whitespace-nowrap font-semibold text-sky-300">
+    <p className="whitespace-nowrap font-semibold text-[color:var(--brand-soft,#7dd3fc)]">
       {op > p ? <span className="mr-1 text-xs font-normal text-white/40 line-through">RM {money(op)}</span> : null}
       RM {money(p)}
     </p>

@@ -59,7 +59,7 @@ export default async function HomePage({
         </div>
 
         <div className="relative mx-auto w-full max-w-6xl px-4 sm:px-6">
-          <p className="reveal text-xs uppercase tracking-[0.35em] text-sky-300">
+          <p className="reveal text-xs uppercase tracking-[0.35em] text-[color:var(--brand-soft,#7dd3fc)]">
             {dict.hero.eyebrow}
           </p>
           <h1 className="reveal reveal-1 mt-4 max-w-3xl text-[clamp(2.5rem,1rem+6vw,5.5rem)] font-semibold leading-[1.02]">
@@ -71,7 +71,7 @@ export default async function HomePage({
           <div className="reveal reveal-3 mt-9 flex flex-wrap gap-4">
             <Link
               href={`${base}/contact`}
-              className="rounded-full px-6 py-3 font-medium text-white shadow-lg shadow-blue-500/30 transition hover:-translate-y-0.5 hover:brightness-110"
+              className="rounded-full px-6 py-3 font-medium text-white shadow-lg shadow-[color:var(--brand-glow,rgba(59,130,246,0.3))] transition hover:-translate-y-0.5 hover:brightness-110"
               style={{ backgroundColor: "var(--brand)" }}
             >
               {dict.hero.cta}
@@ -128,7 +128,7 @@ export default async function HomePage({
             <h2 className="text-3xl font-semibold sm:text-4xl">{dict.showcase.title}</h2>
             <p className="mt-2 text-white/60">{dict.showcase.subtitle}</p>
           </div>
-          <Link href={`${base}/portfolio`} className="text-sm text-sky-300 hover:underline">
+          <Link href={`${base}/portfolio`} className="text-sm text-[color:var(--brand-soft,#7dd3fc)] hover:underline">
             {dict.nav.portfolio} →
           </Link>
         </div>
@@ -166,7 +166,7 @@ export default async function HomePage({
           <p className="mt-3 max-w-2xl text-white/75">{dict.about.body}</p>
           <Link
             href={`${base}/contact`}
-            className="mt-7 inline-block rounded-full px-6 py-3 font-medium text-white shadow-lg shadow-blue-500/30 transition hover:-translate-y-0.5 hover:brightness-110"
+            className="mt-7 inline-block rounded-full px-6 py-3 font-medium text-white shadow-lg shadow-[color:var(--brand-glow,rgba(59,130,246,0.3))] transition hover:-translate-y-0.5 hover:brightness-110"
             style={{ backgroundColor: "var(--brand)" }}
           >
             {dict.contact.cta}
