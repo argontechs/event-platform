@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-02T17:00:00+08:00",
+  "title": "Design System: Event & Decoration Platform",
+  "extensions": {
+    "colorMeta": {
+      "celebration-blue": {
+        "role": "primary",
+        "displayName": "Celebration Blue",
+        "canonical": "#2f6fed",
+        "tonalRamp": ["oklch(0.18 0.09 262)", "oklch(0.28 0.13 262)", "oklch(0.38 0.16 262)", "oklch(0.48 0.18 262)", "oklch(0.58 0.19 262)", "oklch(0.70 0.14 262)", "oklch(0.83 0.08 262)", "oklch(0.94 0.03 262)"]
+      },
+      "deep-royal": {
+        "role": "secondary",
+        "displayName": "Deep Royal",
+        "canonical": "#0e3a8a",
+        "tonalRamp": ["oklch(0.15 0.07 262)", "oklch(0.22 0.10 262)", "oklch(0.30 0.13 262)", "oklch(0.38 0.14 262)", "oklch(0.46 0.14 262)", "oklch(0.60 0.11 262)", "oklch(0.76 0.07 262)", "oklch(0.92 0.03 262)"]
+      },
+      "evening-navy": {
+        "role": "neutral",
+        "displayName": "Evening Navy",
+        "canonical": "#060c1c",
+        "tonalRamp": ["oklch(0.14 0.035 262)", "oklch(0.20 0.04 262)", "oklch(0.28 0.045 262)", "oklch(0.38 0.045 262)", "oklch(0.50 0.04 262)", "oklch(0.65 0.03 262)", "oklch(0.80 0.02 262)", "oklch(0.95 0.008 262)"]
+      },
+      "moonlight": {
+        "role": "neutral",
+        "displayName": "Moonlight",
+        "canonical": "#eef3ff",
+        "tonalRamp": ["oklch(0.20 0.02 262)", "oklch(0.32 0.02 262)", "oklch(0.45 0.02 262)", "oklch(0.58 0.02 262)", "oklch(0.70 0.02 262)", "oklch(0.82 0.015 262)", "oklch(0.90 0.012 262)", "oklch(0.96 0.008 262)"]
+      },
+      "sky-glow": {
+        "role": "tertiary",
+        "displayName": "Sky Glow",
+        "canonical": "#7cc0ff",
+        "tonalRamp": ["oklch(0.25 0.06 250)", "oklch(0.37 0.09 250)", "oklch(0.49 0.11 250)", "oklch(0.61 0.12 250)", "oklch(0.72 0.11 250)", "oklch(0.80 0.09 250)", "oklch(0.88 0.06 250)", "oklch(0.95 0.03 250)"]
+      },
+      "sidebar-navy": {
+        "role": "neutral",
+        "displayName": "Backstage Navy",
+        "canonical": "#0c1c44",
+        "tonalRamp": ["oklch(0.16 0.06 265)", "oklch(0.23 0.08 265)", "oklch(0.31 0.09 265)", "oklch(0.40 0.09 265)", "oklch(0.52 0.08 265)", "oklch(0.66 0.06 265)", "oklch(0.80 0.04 265)", "oklch(0.93 0.02 265)"]
+      },
+      "admin-canvas": { "role": "neutral", "displayName": "Backstage Canvas", "canonical": "#f1f5f9", "tonalRamp": ["oklch(0.18 0.01 250)", "oklch(0.30 0.012 250)", "oklch(0.44 0.014 250)", "oklch(0.58 0.014 250)", "oklch(0.71 0.012 250)", "oklch(0.83 0.01 250)", "oklch(0.91 0.008 250)", "oklch(0.97 0.005 250)"] },
+      "admin-ink": { "role": "neutral", "displayName": "Backstage Ink", "canonical": "#0f172a", "tonalRamp": ["oklch(0.15 0.02 265)", "oklch(0.25 0.025 265)", "oklch(0.36 0.03 265)", "oklch(0.47 0.03 265)", "oklch(0.59 0.025 265)", "oklch(0.72 0.02 265)", "oklch(0.85 0.012 265)", "oklch(0.95 0.006 265)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display (Roxborough CF)", "purpose": "Ceremony only: printed quotation/invoice titles and the thank-you line. Single Regular cut; never fake-bold, no CJK coverage." },
+      "headline": { "displayName": "Hero Headline", "purpose": "The hero title only; clamp-scaled system sans at weight 600." },
+      "body": { "displayName": "Body", "purpose": "System sans everywhere on screen; dimmed via white-opacity on dark, slate-600 on light." },
+      "label": { "displayName": "Eyebrow / Label", "purpose": "Uppercase tracked eyebrows (sky-300) and admin sidebar section labels." }
+    },
+    "shadows": [
+      { "name": "card-glow", "value": "0 24px 50px -24px rgba(47,111,237,0.55)", "purpose": "Hover response on public glass cards, paired with translateY(-6px) and border shift to rgba(124,192,255,0.5)." },
+      { "name": "cta-glow", "value": "0 10px 15px -3px rgba(59,130,246,0.3), 0 4px 6px -4px rgba(59,130,246,0.3)", "purpose": "Resting glow under primary pill CTAs (shadow-lg shadow-blue-500/30)." },
+      { "name": "paper-lift", "value": "0 25px 50px -12px rgba(0,0,0,0.3)", "purpose": "Lifts the white A4 document off the dark quote page." },
+      { "name": "backstage-hint", "value": "0 1px 2px 0 rgba(0,0,0,0.05)", "purpose": "Admin KPI card hover; the only shadow allowed backstage." }
+    ],
+    "motion": [
+      { "name": "ease-reveal", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Expo-out easing for fadeUp reveals (0.8s) with 0.08-0.38s stagger steps." },
+      { "name": "float", "value": "floaty 6s ease-in-out infinite", "purpose": "Gentle vertical drift on decorative accents." },
+      { "name": "hover-lift", "value": "transform 0.3s ease, box-shadow 0.3s ease", "purpose": "Card and CTA lift on hover; -translate-y-0.5 buttons, -6px cards." },
+      { "name": "image-zoom", "value": "transition duration-500 hover:scale-105", "purpose": "Slow zoom on portfolio/package imagery." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Pill CTA",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The signature public call-to-action: tenant spotlight color, lift and glow.",
+      "html": "<button class=\"ds-btn-primary\">Enquire now</button>",
+      "css": ".ds-btn-primary { background: var(--brand, #2f6fed); color: #fff; padding: 12px 24px; border: none; border-radius: 9999px; font-weight: 500; font-size: 1rem; box-shadow: 0 10px 15px -3px rgba(59,130,246,0.3), 0 4px 6px -4px rgba(59,130,246,0.3); transition: transform 0.2s ease, filter 0.2s ease; cursor: pointer; } .ds-btn-primary:hover { transform: translateY(-2px); filter: brightness(1.1); } .ds-btn-primary:focus-visible { outline: 2px solid #7cc0ff; outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Pill",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary public action: translucent bordered pill with blur.",
+      "html": "<button class=\"ds-btn-ghost\">View portfolio</button>",
+      "css": ".ds-btn-ghost { background: transparent; color: rgba(255,255,255,0.9); padding: 12px 24px; border: 1px solid rgba(255,255,255,0.2); border-radius: 9999px; font-weight: 500; font-size: 1rem; backdrop-filter: blur(8px); transition: transform 0.2s ease, background 0.2s ease; cursor: pointer; } .ds-btn-ghost:hover { transform: translateY(-2px); background: rgba(255,255,255,0.1); } .ds-btn-ghost:focus-visible { outline: 2px solid #7cc0ff; outline-offset: 2px; }"
+    },
+    {
+      "name": "Glass Card",
+      "kind": "card",
+      "refersTo": "card-glass",
+      "description": "The dominant public surface: translucent bordered card that glows on hover.",
+      "html": "<div class=\"ds-card-glass\"><h3>Wedding Stage</h3><p>Full backdrop, arch, and floral styling for your ceremony.</p></div>",
+      "css": ".ds-card-glass { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; color: #eef3ff; transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; } .ds-card-glass:hover { transform: translateY(-6px); box-shadow: 0 24px 50px -24px rgba(47,111,237,0.55); border-color: rgba(124,192,255,0.5); } .ds-card-glass h3 { margin: 0 0 8px; font-size: 1.125rem; font-weight: 500; } .ds-card-glass p { margin: 0; font-size: 0.9rem; color: rgba(255,255,255,0.6); line-height: 1.6; }"
+    },
+    {
+      "name": "Admin Primary Button",
+      "kind": "button",
+      "refersTo": "button-admin",
+      "description": "Backstage primary action: compact, flat, accent-filled.",
+      "html": "<button class=\"ds-btn-admin\">Create quotation</button>",
+      "css": ".ds-btn-admin { background: #2f6fed; color: #fff; padding: 8px 16px; border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 500; transition: filter 0.2s ease; cursor: pointer; } .ds-btn-admin:hover { filter: brightness(1.1); } .ds-btn-admin:focus-visible { outline: 2px solid #2f6fed; outline-offset: 2px; }"
+    },
+    {
+      "name": "Admin Input",
+      "kind": "input",
+      "refersTo": "input-admin",
+      "description": "Backstage form field: white, slate border, accent focus.",
+      "html": "<input class=\"ds-input-admin\" placeholder=\"Search leads...\" />",
+      "css": ".ds-input-admin { background: #fff; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 12px; font-size: 0.875rem; outline: none; transition: border-color 0.15s ease; } .ds-input-admin:focus { border-color: #2f6fed; } .ds-input-admin::placeholder { color: #64748b; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge-status",
+      "description": "Backstage tonal status pill (emerald=paid, blue=sent, amber=pending, red=lost).",
+      "html": "<span class=\"ds-badge-status ds-badge-paid\">PAID</span> <span class=\"ds-badge-status ds-badge-pending\">PENDING</span>",
+      "css": ".ds-badge-status { display: inline-block; border-radius: 9999px; padding: 2px 8px; font-size: 0.75rem; font-weight: 500; } .ds-badge-paid { background: #d1fae5; color: #047857; } .ds-badge-pending { background: #fef3c7; color: #b45309; }"
+    },
+    {
+      "name": "Dark Input (Public)",
+      "kind": "input",
+      "refersTo": "card-glass",
+      "description": "Customer-facing field on the dark stage: translucent with brand focus.",
+      "html": "<input class=\"ds-input-dark\" placeholder=\"Your event date\" />",
+      "css": ".ds-input-dark { background: rgba(255,255,255,0.05); color: #eef3ff; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 10px 12px; font-size: 1rem; outline: none; transition: border-color 0.15s ease; } .ds-input-dark:focus { border-color: var(--brand, #2f6fed); } .ds-input-dark::placeholder { color: rgba(255,255,255,0.4); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Venue at Dusk",
+    "overview": "The public sites feel like stepping into a beautifully lit event hall just before guests arrive: a deep evening-navy room washed with soft blue radial light, glass surfaces that catch a glow on touch, and a 3D centerpiece slowly turning under the lights. Each tenant company brings its own spotlight via --brand/--brand-2 CSS variables. Behind the ballroom is the backstage: a separate, deliberately unglamorous light system built for daily lead-to-invoice work. The third world is paper: quotations and invoices render as white A4 documents with a Roxborough CF serif title, presented like a lit sheet of paper on a stage table.",
+    "keyCharacteristics": [
+      "Dark, cinematic customer surfaces; light, utilitarian staff surfaces; white printable documents.",
+      "One tenant spotlight color drives all action states via CSS variables.",
+      "Depth from light (glows) on the public site; depth from borders (flat) in admin.",
+      "Translucent white-opacity ladder instead of gray scales on dark.",
+      "Motion is staged: fade-up reveals with expo easing, floating accents, 3D hero; all honor prefers-reduced-motion."
+    ],
+    "rules": [
+      { "name": "The Tenant Spotlight Rule", "body": "Never hardcode Celebration Blue on a customer-facing surface. Actions use var(--brand), ambience uses color-mix. A company with a rose or gold brand must re-skin completely with zero code changes.", "section": "colors" },
+      { "name": "The Two Rooms Rule", "body": "The ballroom (dark public) and the backstage (light admin) never blend. A light slate input on a dark customer page is a defect, not a variation.", "section": "colors" },
+      { "name": "The White Paper Rule", "body": "Money documents always render as white paper: on screen inside rounded-xl shadow-2xl on the dark stage, in print as clean A4 with zero app chrome.", "section": "colors" },
+      { "name": "The Letterhead Rule", "body": "Roxborough CF is reserved for moments of ceremony. It never becomes a general heading font, and it has no bold cut, so never fake-bold it.", "section": "typography" },
+      { "name": "The Shared Stack Rule", "body": "EN, BM, and ZH all render in the system stack. Any future display-font use on customer surfaces must define an explicit CJK fallback before shipping.", "section": "typography" },
+      { "name": "The Stage Light Rule", "body": "Shadows on the public site are always tinted with the brand hue, never neutral gray. If an element needs neutral elevation, it should probably be white paper.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do route every customer-facing action color through var(--brand) / var(--brand-2).",
+      "Do keep public depth as brand-tinted glow and admin depth as slate-200 borders.",
+      "Do render money moments as white paper on the dark stage with shadow-2xl shadow-black/30.",
+      "Do honor prefers-reduced-motion on every animation, including the R3F hero and reveal staggers.",
+      "Do dim text with the white-opacity ladder and verify ≥4.5:1 contrast for body sizes."
+    ],
+    "donts": [
+      "Don't build generic AI/SaaS template surfaces: identical icon-card grids or hero-metric blocks; no NEW gradient-clipped text (the existing hero gradient is a documented brand exception, see The Signature Gradient Exception).",
+      "Don't drift toward cheap party-store: clip-art, balloon icons, loud primary color mixes.",
+      "Don't go corporate & sterile or cluttered directory: no stock-suit imagery, no dense ad-like listings.",
+      "Don't hardcode #2f6fed on customer surfaces; a rose-gold tenant must never leak blue.",
+      "Don't mix the rooms: no light slate controls on dark customer pages.",
+      "Don't use neutral gray shadows on the public site; tint with the brand hue or use borders.",
+      "Don't fake-bold Roxborough CF or use it on CJK text without a defined fallback."
+    ]
+  }
+}
