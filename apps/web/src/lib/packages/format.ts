@@ -44,3 +44,19 @@ export function groupByCode<T extends { code: string | null; price: unknown }>(
   }
   return blocks;
 }
+
+/** Parse a ?page= value into a 1-based page clamped to [1, pages]. */
+export function clampPage(raw: unknown, pages: number): number {
+  const n = Math.trunc(Number(raw));
+  return Math.min(Math.max(1, pages), Math.max(1, Number.isFinite(n) ? n : 1));
+}
+
+export type Page<T> = { items: T[]; page: number; pages: number; total: number };
+
+/** Clamp-and-slice pagination over an in-memory list. */
+export function paginate<T>(items: T[], rawPage: unknown, perPage: number): Page<T> {
+  const pages = Math.max(1, Math.ceil(items.length / perPage));
+  const page = clampPage(rawPage, pages);
+  const start = (page - 1) * perPage;
+  return { items: items.slice(start, start + perPage), page, pages, total: items.length };
+}

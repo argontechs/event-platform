@@ -5,17 +5,23 @@ import { getActiveCompanyId } from "@/lib/tenant";
 import { SelectCompanyNotice } from "@/components/admin/select-company-notice";
 import { PackageCreateForm } from "@/components/admin/package-create-form";
 import { addPackageImagesAction, deletePackageAction, togglePackageAction } from "@/lib/packages/actions";
-import { parseInclusions } from "@/lib/packages/format";
+import { parseInclusions, clampPage } from "@/lib/packages/format";
 import { getBoLang } from "@/lib/i18n/bo";
 import { makeT } from "@/lib/i18n/t";
 
 export const dynamic = "force-dynamic";
 
+const PER_PAGE = 20;
+
 function money(n: number): string {
   return n.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export default async function PackagesAdminPage() {
+export default async function PackagesAdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const t = makeT(await getBoLang());
   const user = await requireUser();
   const companyId = await getActiveCompanyId(user);
@@ -30,9 +36,14 @@ export default async function PackagesAdminPage() {
     );
   }
 
+  const total = await prisma.package.count({ where: { companyId } });
+  const pages = Math.max(1, Math.ceil(total / PER_PAGE));
+  const page = clampPage((await searchParams).page, pages);
   const packages = await prisma.package.findMany({
     where: { companyId },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    skip: (page - 1) * PER_PAGE,
+    take: PER_PAGE,
   });
 
   return (
@@ -122,6 +133,18 @@ export default async function PackagesAdminPage() {
           })}
         </div>
       )}
+
+      {pages > 1 ? (
+        <nav aria-label="Pagination" className="mt-6 flex items-center justify-center gap-1.5">
+          {Array.from({ length: pages }, (_, i) => i + 1).map((n) =>
+            n === page ? (
+              <span key={n} aria-current="page" className="rounded-md bg-slate-800 px-3 py-1.5 text-sm font-medium text-white">{n}</span>
+            ) : (
+              <Link key={n} href={`/admin/packages?page=${n}`} className="rounded-md border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100">{n}</Link>
+            ),
+          )}
+        </nav>
+      ) : null}
     </section>
   );
 }
