@@ -7,14 +7,24 @@ import { useRef } from "react";
  * <dialog> element: Esc + backdrop dismissal come free, and the image is
  * already cached from the card render (same URL).
  */
-export function ZoomableImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
+export function ZoomableImage({
+  src,
+  alt,
+  className,
+  buttonClassName = "block w-full cursor-zoom-in",
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+  buttonClassName?: string;
+}) {
   const ref = useRef<HTMLDialogElement>(null);
   return (
     <>
       <button
         type="button"
         onClick={() => ref.current?.showModal()}
-        className="block w-full cursor-zoom-in"
+        className={buttonClassName}
         aria-label={`View ${alt} full size`}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}

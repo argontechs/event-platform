@@ -6,6 +6,7 @@ import { SelectCompanyNotice } from "@/components/admin/select-company-notice";
 import { PackageCreateForm } from "@/components/admin/package-create-form";
 import { addPackageImagesAction, deletePackageAction, togglePackageAction } from "@/lib/packages/actions";
 import { parseInclusions, clampPage } from "@/lib/packages/format";
+import { ZoomableImage } from "@/components/site/zoomable-image";
 import { getBoLang } from "@/lib/i18n/bo";
 import { makeT } from "@/lib/i18n/t";
 
@@ -66,8 +67,7 @@ export default async function PackagesAdminPage({
             return (
               <div key={p.id} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
                 {imgs[0] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={imgs[0]} alt={p.name} className="aspect-video w-full object-cover" />
+                  <ZoomableImage src={imgs[0]} alt={p.name} className="aspect-video w-full object-cover" />
                 ) : (
                   <div className="aspect-video w-full bg-slate-100" />
                 )}
@@ -103,8 +103,7 @@ export default async function PackagesAdminPage({
                   {imgs.length > 1 ? (
                     <div className="mt-3 flex gap-1.5">
                       {imgs.slice(1, 5).map((u, i) => (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img key={i} src={u} alt="" className="h-12 w-12 rounded object-cover" />
+                        <ZoomableImage key={i} src={u} alt={p.name} buttonClassName="cursor-zoom-in" className="h-12 w-12 rounded object-cover" />
                       ))}
                     </div>
                   ) : null}
