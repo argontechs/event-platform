@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@event/db";
 import { isLocale } from "@/lib/i18n/config";
 import { getCompanyByHost } from "@/lib/tenant";
+import { parseInclusions, groupByCode } from "@/lib/packages/format";
 
 export const dynamic = "force-dynamic";
 
@@ -41,31 +42,43 @@ export default async function PackagesPage({
         groupByCategory(packages).map((group) => (
           <section key={group.category} className="mt-14">
             <h2 className="text-2xl font-semibold text-white/90">{group.category}</h2>
-            <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {group.items.map((p, i) => {
-                const imgs = Array.isArray(p.imageUrls) ? (p.imageUrls as string[]) : [];
-                return (
-                  <div key={p.id} className={`card-glow reveal reveal-${(i % 4) + 1} overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]`}>
-                    {imgs[0] ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={imgs[0]} alt={p.name} className="aspect-[4/3] w-full object-cover" />
-                    ) : (
-                      <div className="aspect-[4/3] w-full bg-gradient-to-br from-white/[0.08] to-transparent" />
-                    )}
-                    <div className="p-5">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="text-lg font-medium">{p.name}</h3>
-                        {Number(p.price) > 0 ? (
-                          <p className="whitespace-nowrap font-semibold text-sky-300">RM {money(Number(p.price))}</p>
-                        ) : (
-                          <p className="whitespace-nowrap text-xs uppercase tracking-wide text-sky-300/70">Included</p>
-                        )}
+            <div className="mt-6 space-y-8">
+              {(() => {
+                // Coded designs render full-width with their tiers side by side;
+                // consecutive uncoded packages keep the original 3-up card grid.
+                const blocks = groupByCode(group.items as PkgRow[]);
+                const out: React.ReactNode[] = [];
+                let batch: PkgRow[] = [];
+                const flush = () => {
+                  if (batch.length === 0) return;
+                  out.push(
+                    <div key={`singles-${out.length}`} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                      {batch.map((p, i) => <SingleCard key={p.id} p={p} reveal={(i % 4) + 1} />)}
+                    </div>,
+                  );
+                  batch = [];
+                };
+                for (const b of blocks) {
+                  if (b.kind === "single") {
+                    batch.push(b.pkg);
+                    continue;
+                  }
+                  flush();
+                  out.push(
+                    <div key={b.code} className="card-glow rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <h3 className="text-lg font-medium">{b.tiers[0]?.name ?? group.category}</h3>
+                        <span className="text-xs uppercase tracking-wide text-white/40">{b.code}</span>
                       </div>
-                      {p.description ? <p className="mt-2 text-sm leading-relaxed text-white/55">{p.description}</p> : null}
-                    </div>
-                  </div>
-                );
-              })}
+                      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                        {b.tiers.map((tp) => <TierCard key={tp.id} p={tp} />)}
+                      </div>
+                    </div>,
+                  );
+                }
+                flush();
+                return out;
+              })()}
             </div>
           </section>
         ))
@@ -83,8 +96,11 @@ export default async function PackagesPage({
 type PkgRow = {
   id: string;
   name: string;
+  code: string | null;
+  tierLabel: string | null;
   category: string | null;
   price: unknown;
+  originalPrice: unknown;
   description: string | null;
   imageUrls: unknown;
 };
@@ -102,4 +118,71 @@ function groupByCategory(packages: PkgRow[]): { category: string; items: PkgRow[
     g.items.push(p);
   }
   return groups;
+}
+
+function Inclusions({ description }: { description: string | null }) {
+  const items = parseInclusions(description);
+  if (items.length === 0) return null;
+  if (items.length === 1 && !(description ?? "").includes("•")) {
+    return <p className="mt-2 text-sm leading-relaxed text-white/55">{items[0]}</p>;
+  }
+  return (
+    <ul className="mt-2 list-disc space-y-1 pl-4 text-sm leading-relaxed text-white/55">
+      {items.map((it, i) => <li key={i}>{it}</li>)}
+    </ul>
+  );
+}
+
+function Price({ price, originalPrice }: { price: unknown; originalPrice: unknown }) {
+  const p = Number(price);
+  const op = originalPrice == null ? 0 : Number(originalPrice);
+  if (p <= 0) return <p className="whitespace-nowrap text-xs uppercase tracking-wide text-sky-300/70">Included</p>;
+  return (
+    <p className="whitespace-nowrap font-semibold text-sky-300">
+      {op > p ? <span className="mr-1 text-xs font-normal text-white/40 line-through">RM {money(op)}</span> : null}
+      RM {money(p)}
+    </p>
+  );
+}
+
+function SingleCard({ p, reveal }: { p: PkgRow; reveal: number }) {
+  const imgs = Array.isArray(p.imageUrls) ? (p.imageUrls as string[]) : [];
+  return (
+    <div className={`card-glow reveal reveal-${reveal} overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]`}>
+      {imgs[0] ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={imgs[0]} alt={p.name} className="aspect-[4/3] w-full object-cover" />
+      ) : (
+        <div className="aspect-[4/3] w-full bg-gradient-to-br from-white/[0.08] to-transparent" />
+      )}
+      <div className="p-5">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-lg font-medium">{p.name}</h3>
+          <Price price={p.price} originalPrice={p.originalPrice} />
+        </div>
+        <Inclusions description={p.description} />
+      </div>
+    </div>
+  );
+}
+
+function TierCard({ p }: { p: PkgRow }) {
+  const imgs = Array.isArray(p.imageUrls) ? (p.imageUrls as string[]) : [];
+  return (
+    <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02]">
+      {imgs[0] ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={imgs[0]} alt={p.tierLabel ?? p.name} className="aspect-[4/3] w-full object-cover" />
+      ) : (
+        <div className="aspect-[4/3] w-full bg-gradient-to-br from-white/[0.08] to-transparent" />
+      )}
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-2">
+          <h4 className="text-base font-medium">{p.tierLabel ?? p.name}</h4>
+          <Price price={p.price} originalPrice={p.originalPrice} />
+        </div>
+        <Inclusions description={p.description} />
+      </div>
+    </div>
+  );
 }
