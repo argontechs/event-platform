@@ -5,6 +5,7 @@ import { getActiveCompanyId } from "@/lib/tenant";
 import { SelectCompanyNotice } from "@/components/admin/select-company-notice";
 import { PackageCreateForm } from "@/components/admin/package-create-form";
 import { addPackageImagesAction, deletePackageAction, togglePackageAction } from "@/lib/packages/actions";
+import { parseInclusions } from "@/lib/packages/format";
 import { getBoLang } from "@/lib/i18n/bo";
 import { makeT } from "@/lib/i18n/t";
 
@@ -62,12 +63,32 @@ export default async function PackagesAdminPage() {
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="font-medium text-slate-900">{p.name}</p>
+                      <p className="font-medium text-slate-900">
+                        {p.code ? <span className="mr-1 text-slate-400">{p.code}</span> : null}
+                        {p.name}
+                      </p>
+                      {p.tierLabel ? <p className="text-xs font-medium text-slate-500">{p.tierLabel}</p> : null}
                       {p.category ? <p className="text-xs text-slate-400">{p.category}</p> : null}
                     </div>
-                    <p className="font-semibold text-accent">RM {money(Number(p.price))}</p>
+                    <div className="text-right">
+                      {p.originalPrice != null && Number(p.originalPrice) > 0 ? (
+                        <p className="text-xs text-slate-400 line-through">RM {money(Number(p.originalPrice))}</p>
+                      ) : null}
+                      <p className="font-semibold text-accent">RM {money(Number(p.price))}</p>
+                    </div>
                   </div>
-                  {p.description ? <p className="mt-2 text-sm text-slate-600">{p.description}</p> : null}
+                  {(() => {
+                    const items = parseInclusions(p.description);
+                    if (items.length === 0) return null;
+                    if (items.length === 1 && !(p.description ?? "").includes("•")) {
+                      return <p className="mt-2 text-sm text-slate-600">{items[0]}</p>;
+                    }
+                    return (
+                      <ul className="mt-2 list-disc space-y-0.5 pl-4 text-sm text-slate-600">
+                        {items.map((it, i) => <li key={i}>{it}</li>)}
+                      </ul>
+                    );
+                  })()}
                   {imgs.length > 1 ? (
                     <div className="mt-3 flex gap-1.5">
                       {imgs.slice(1, 5).map((u, i) => (
