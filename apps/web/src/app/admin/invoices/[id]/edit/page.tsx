@@ -23,6 +23,18 @@ export default async function InvoiceEditPage({
   if (!inv) notFound();
   if (!isSuperAdmin(user) && user.companyId !== inv.companyId) redirect("/admin/invoices");
 
+  const pkgs = await prisma.package.findMany({
+    where: { companyId: inv.companyId, active: true },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    select: { id: true, name: true, price: true, description: true },
+  });
+  const packages = pkgs.map((p) => ({
+    id: p.id,
+    name: p.name,
+    price: Number(p.price),
+    description: p.description ?? "",
+  }));
+
   const rawItems = Array.isArray(inv.items) ? (inv.items as unknown as InvoiceLine[]) : [];
   const lines: InvoiceLine[] = rawItems.map((it) => ({
     description: it.description,
@@ -45,6 +57,7 @@ export default async function InvoiceEditPage({
         sstRate={Number(inv.company.sstRate)}
         sstRegistered={inv.company.sstRegistered}
         amountPaid={Number(inv.amountPaid)}
+        packages={packages}
         initial={{
           number: inv.number,
           lines,
