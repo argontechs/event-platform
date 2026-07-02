@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { prisma } from "@event/db";
 import { requireSalesRole, isSuperAdmin } from "../auth/rbac";
 import { getActiveCompanyId } from "../tenant";
@@ -60,6 +61,44 @@ export async function createPackageAction(
   });
   revalidatePath("/admin/packages");
   return { error: "", ok: true };
+}
+
+/** Edit an existing package's fields (not its images — use addPackageImagesAction). */
+export async function updatePackageAction(
+  packageId: string,
+  _prev: PackageState,
+  formData: FormData,
+): Promise<PackageState> {
+  const user = await requireSalesRole();
+  if (!canManage(user)) return { error: "You don't have permission." };
+  const pkg = await prisma.package.findUnique({ where: { id: packageId } });
+  if (!pkg || (!isSuperAdmin(user) && user.companyId !== pkg.companyId)) return { error: "Not found." };
+
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) return { error: "Package name is required." };
+  const price = Number(formData.get("price") ?? 0);
+  const category = String(formData.get("category") ?? "").trim() || null;
+  const description = String(formData.get("description") ?? "").trim() || null;
+  const code = String(formData.get("code") ?? "").trim() || null;
+  const tierLabel = String(formData.get("tierLabel") ?? "").trim() || null;
+  const opRaw = String(formData.get("originalPrice") ?? "").trim();
+  const opNum = Number(opRaw);
+  const originalPrice = opRaw !== "" && Number.isFinite(opNum) ? opNum : null;
+
+  await prisma.package.update({
+    where: { id: packageId },
+    data: {
+      name,
+      code,
+      tierLabel,
+      category,
+      description,
+      price: Number.isFinite(price) ? price : 0,
+      originalPrice,
+    },
+  });
+  revalidatePath("/admin/packages");
+  redirect("/admin/packages");
 }
 
 export async function addPackageImagesAction(packageId: string, formData: FormData): Promise<void> {

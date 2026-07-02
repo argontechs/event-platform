@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@event/db";
 import { requireUser, isSuperAdmin } from "@/lib/auth/rbac";
 import { getActiveCompanyId } from "@/lib/tenant";
@@ -82,6 +83,7 @@ export default async function PackagesAdminPage() {
                         <input name="images" type="file" accept="image/*" multiple className="w-36 text-xs text-slate-600 file:mr-2 file:rounded file:border-0 file:bg-slate-100 file:px-2 file:py-1" />
                         <button className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-700 hover:bg-slate-100">{t("Add images")}</button>
                       </form>
+                      <Link href={`/admin/packages/${p.id}/edit`} className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-700 hover:bg-slate-100">{t("Edit")}</Link>
                       <form action={togglePackageAction.bind(null, p.id)}>
                         <button className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-700 hover:bg-slate-100">
                           {p.active ? t("Hide") : t("Show")}
