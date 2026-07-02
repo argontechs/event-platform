@@ -4,6 +4,7 @@ import { requireUser, isSuperAdmin, canManageCompany } from "@/lib/auth/rbac";
 import { getActiveCompanyId } from "@/lib/tenant";
 import { PrintButton } from "@/components/admin/print-button";
 import { PettyCashForms } from "@/components/admin/petty-cash-forms";
+import { ConfirmSubmit } from "@/components/admin/confirm-submit";
 import { approvePettyAction, rejectPettyAction, deletePettyAction } from "@/lib/petty-cash/actions";
 import { getBoLang } from "@/lib/i18n/bo";
 import { makeT } from "@/lib/i18n/t";
@@ -238,7 +239,13 @@ export default async function PettyCashPage({
                         </div>
                       ) : manager ? (
                         <form action={deletePettyAction.bind(null, e.id)}>
-                          <button className="text-xs text-slate-400 hover:text-red-500">{t("Delete")}</button>
+                          <ConfirmSubmit
+                            label={t("Delete")}
+                            title={t("Delete this entry?")}
+                            description={t("This cannot be undone.")}
+                            confirmLabel={t("Delete")}
+                            buttonClassName="text-xs text-slate-400 hover:text-red-500"
+                          />
                         </form>
                       ) : null}
                     </td>

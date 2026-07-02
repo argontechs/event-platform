@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth/rbac";
 import { getActiveCompanyId } from "@/lib/tenant";
 import { SelectCompanyNotice } from "@/components/admin/select-company-notice";
 import { StatusBadge } from "@/components/admin/status-badge";
+import { ConfirmSubmit } from "@/components/admin/confirm-submit";
 import { dateRangeFilter } from "@/components/admin/list-filters";
 import { createQuotationForLead } from "@/lib/quotations/actions";
 import { updateLeadStatusAction } from "@/lib/leads/actions";
@@ -179,7 +180,12 @@ async function LeadsTable({
                           </form>
                           <form action={updateLeadStatusAction.bind(null, l.id)}>
                             <input type="hidden" name="status" value="LOST" />
-                            <button className="rounded-md border border-slate-200 px-2.5 py-1 text-xs text-red-600 hover:bg-red-50">{t("Lost")}</button>
+                            <ConfirmSubmit
+                              label={t("Lost")}
+                              title={t("Mark this lead as lost?")}
+                              confirmLabel={t("Mark as lost")}
+                              buttonClassName="rounded-md border border-slate-200 px-2.5 py-1 text-xs text-red-600 hover:bg-red-50"
+                            />
                           </form>
                         </>
                       ) : null}

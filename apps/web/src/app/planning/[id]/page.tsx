@@ -19,6 +19,7 @@ import {
   loadPrepTemplateAction,
 } from "@/lib/planning/actions";
 import { EventForm, type EventValues } from "@/components/planning/event-form";
+import { ConfirmSubmit } from "@/components/admin/confirm-submit";
 import { getBoLang } from "@/lib/i18n/bo";
 import { makeT } from "@/lib/i18n/t";
 
@@ -201,7 +202,13 @@ export default async function EventBoardPage({
                   {task.category ? <span className="ml-2 text-xs text-slate-400">{task.category}</span> : null}
                 </span>
                 <form action={deleteTaskAction.bind(null, task.id)}>
-                  <button className="text-slate-400 hover:text-red-400" aria-label={t("Delete task")}>✕</button>
+                  <ConfirmSubmit
+                    label="✕"
+                    ariaLabel={t("Delete task")}
+                    title={t("Delete this task?")}
+                    confirmLabel={t("Delete")}
+                    buttonClassName="text-slate-400 hover:text-red-400"
+                  />
                 </form>
               </div>
             ))}
@@ -231,7 +238,13 @@ export default async function EventBoardPage({
                   <span className="flex-1 text-slate-900">{r.activity}</span>
                   {r.owner ? <span className="text-slate-400">{r.owner}</span> : null}
                   <form action={deleteRunSheetAction.bind(null, r.id)}>
-                    <button className="text-slate-400 hover:text-red-500" aria-label={t("Delete entry")}>✕</button>
+                    <ConfirmSubmit
+                      label="✕"
+                      ariaLabel={t("Delete entry")}
+                      title={t("Delete this entry?")}
+                      confirmLabel={t("Delete")}
+                      buttonClassName="text-slate-400 hover:text-red-500"
+                    />
                   </form>
                 </div>
               ))
@@ -261,7 +274,13 @@ export default async function EventBoardPage({
                   <span className="flex items-center gap-3">
                     <span className="text-slate-600">{rm(Number(bs.cost ?? 0))}</span>
                     <form action={removeSupplierFromEventAction.bind(null, bs.id)}>
-                      <button className="text-slate-400 hover:text-red-500" aria-label={t("Remove supplier")}>✕</button>
+                      <ConfirmSubmit
+                        label="✕"
+                        ariaLabel={t("Remove supplier")}
+                        title={t("Remove this supplier from the event?")}
+                        confirmLabel={t("Remove")}
+                        buttonClassName="text-slate-400 hover:text-red-500"
+                      />
                     </form>
                   </span>
                 </div>
@@ -298,6 +317,7 @@ export default async function EventBoardPage({
                 bothLabel: t("both"),
               }))}
               removeLabel={t("Remove")}
+              confirmTitle={t("Remove this crew member?")}
             />
             <CrewColumn
               title={t("Dismantle")}
@@ -312,6 +332,7 @@ export default async function EventBoardPage({
                 bothLabel: t("both"),
               }))}
               removeLabel={t("Remove")}
+              confirmTitle={t("Remove this crew member?")}
             />
           </div>
 
@@ -404,6 +425,7 @@ function CrewColumn({
   empty,
   members,
   removeLabel,
+  confirmTitle,
 }: {
   title: string;
   tone: "blue" | "amber";
@@ -417,6 +439,7 @@ function CrewColumn({
     bothLabel: string;
   }[];
   removeLabel: string;
+  confirmTitle: string;
 }) {
   const dot = tone === "blue" ? "bg-blue-500" : "bg-amber-500";
   return (
@@ -441,9 +464,13 @@ function CrewColumn({
                 {m.phone ? <span className="ml-1 text-xs text-slate-400">{m.phone}</span> : null}
               </span>
               <form action={removeCrewFromEventAction.bind(null, m.id)}>
-                <button className="text-slate-400 hover:text-red-500" aria-label={removeLabel}>
-                  ✕
-                </button>
+                <ConfirmSubmit
+                  label="✕"
+                  ariaLabel={removeLabel}
+                  title={confirmTitle}
+                  confirmLabel={removeLabel}
+                  buttonClassName="text-slate-400 hover:text-red-500"
+                />
               </form>
             </li>
           ))}
@@ -488,9 +515,13 @@ function PrepColumn({
               {it.remark ? <span className="ml-1 text-xs text-amber-600">· {it.remark}</span> : null}
             </span>
             <form action={deletePrepItemAction.bind(null, it.id)}>
-              <button className="text-slate-400 hover:text-red-500" aria-label={t("Delete")}>
-                ✕
-              </button>
+              <ConfirmSubmit
+                label="✕"
+                ariaLabel={t("Delete")}
+                title={t("Delete this item?")}
+                confirmLabel={t("Delete")}
+                buttonClassName="text-slate-400 hover:text-red-500"
+              />
             </form>
           </li>
         ))}

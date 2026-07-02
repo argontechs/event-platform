@@ -3,6 +3,7 @@ import { requireUser, isSuperAdmin } from "@/lib/auth/rbac";
 import { getActiveCompanyId } from "@/lib/tenant";
 import { SelectCompanyNotice } from "@/components/admin/select-company-notice";
 import { PortfolioUpload } from "@/components/admin/portfolio-upload";
+import { ConfirmSubmit } from "@/components/admin/confirm-submit";
 import { deletePortfolioAction } from "@/lib/portfolio/actions";
 import { getBoLang } from "@/lib/i18n/bo";
 import { makeT } from "@/lib/i18n/t";
@@ -56,12 +57,14 @@ export default async function PortfolioAdminPage() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={img.url} alt={img.filename ?? "portfolio"} className="aspect-square w-full object-cover" />
               <form action={deletePortfolioAction.bind(null, img.id)} className="absolute right-1.5 top-1.5">
-                <button
-                  className="rounded-md bg-black/60 px-2 py-1 text-xs text-white opacity-0 transition group-hover:opacity-100"
-                  aria-label={t("Delete image")}
-                >
-                  ✕
-                </button>
+                <ConfirmSubmit
+                  label="✕"
+                  ariaLabel={t("Delete image")}
+                  title={t("Delete this image?")}
+                  description={t("This cannot be undone.")}
+                  confirmLabel={t("Delete")}
+                  buttonClassName="rounded-md bg-black/60 px-2 py-1 text-xs text-white opacity-0 transition focus-visible:opacity-100 group-hover:opacity-100"
+                />
               </form>
             </div>
           ))}

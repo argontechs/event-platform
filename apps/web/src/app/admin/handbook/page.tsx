@@ -93,7 +93,7 @@ export default function HandbookPage() {
       </Section>
 
       <Section icon="🧭" en="Situations &amp; how to handle them" zh="常见情况与处理方法">
-        <When sitEn="Customer requested changes" sitZh="客户要求修改" doEn="Open the quote — their feedback shows in an amber banner and is pre-filled in the AI prompt. Adjust, click Generate (or edit by hand), then 'Resend (new code)' to send a new version." doZh="打开报价 — 反馈显示在橙色横幅中并预填到 AI 提示。调整后点「生成」（或手动编辑），再点「重新发送（新访问码）」发送新版本。" />
+        <When sitEn="Customer requested changes" sitZh="客户要求修改" doEn="Open the quote — their feedback shows in an amber banner and is pre-filled in the AI prompt. Adjust, click Generate (or edit by hand), then 'Resend with new code' to send a new version — the customer's old access code stops working." doZh="打开报价 — 反馈显示在橙色横幅中并预填到 AI 提示。调整后点「生成」（或手动编辑），再点「重新发送（新验证码）」发送新版本——客户旧的访问码将失效。" />
         <When sitEn="Customer went quiet / not paying" sitZh="客户没回应 / 未付款" doEn="The booking stays 'awaiting deposit'. Follow up via WhatsApp. If it falls through, set the lead to Lost." doZh="预订维持「等待订金」。通过 WhatsApp 跟进。若不成，把询问设为「流失」。" />
         <When sitEn="A payment proof was uploaded" sitZh="客户上传了付款凭证" doEn="Bookings → open it → check the proof image → Confirm payment. The first deposit issues the invoice and starts planning." doZh="「预订」→ 打开 → 检查凭证图片 → 确认付款。首次订金会开出发票并开始策划。" />
         <When sitEn="WhatsApp bot is chatting with a customer" sitZh="WhatsApp 机器人正在与客户对话" doEn="The thread shows a '🤖 bot is handling this' banner. To take over, click 'Take over' or just reply — that stops the bot." doZh="对话会显示「🤖 机器人处理中」横幅。要接手，点「接手」或直接回复，机器人即停止。" />
