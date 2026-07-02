@@ -12,10 +12,13 @@ body {
   margin: 0;
 }
 
+/* Brand-derived vars (--brand-wash-*, --brand-grad-*, --brand-glow-*) are set on
+   the [locale] layout wrapper; these rules also apply outside it, so every var()
+   below carries the exact original literal as its fallback. */
 body {
   background:
-    radial-gradient(60% 60% at 20% 10%, rgba(37, 99, 235, 0.20), transparent 60%),
-    radial-gradient(50% 50% at 90% 90%, rgba(14, 116, 233, 0.16), transparent 60%),
+    radial-gradient(60% 60% at 20% 10%, var(--brand-wash-1, rgba(37, 99, 235, 0.20)), transparent 60%),
+    radial-gradient(50% 50% at 90% 90%, var(--brand-wash-2, rgba(14, 116, 233, 0.16)), transparent 60%),
     #060c1c;
   color: #eef3ff;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
@@ -46,8 +49,10 @@ body {
 .reveal-3 { animation-delay: 0.28s; }
 .reveal-4 { animation-delay: 0.38s; }
 .float { animation: floaty 6s ease-in-out infinite; }
+/* Signature Gradient Exception (DESIGN.md): kept by owner decision; stops are
+   var-driven so other tenants don't inherit Party Eventilicious blue-violet. */
 .gradient-text {
-  background: linear-gradient(90deg, #7cc0ff, #a78bfa, #7cc0ff);
+  background: linear-gradient(90deg, var(--brand-grad-1, #7cc0ff), var(--brand-grad-2, #a78bfa), var(--brand-grad-1, #7cc0ff));
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
@@ -59,8 +64,8 @@ body {
 }
 .card-glow:hover {
   transform: translateY(-6px);
-  box-shadow: 0 24px 50px -24px rgba(47, 111, 237, 0.55);
-  border-color: rgba(124, 192, 255, 0.5);
+  box-shadow: 0 24px 50px -24px var(--brand-glow-strong, rgba(47, 111, 237, 0.55));
+  border-color: var(--brand-glow-border, rgba(124, 192, 255, 0.5));
 }
 @media (prefers-reduced-motion: reduce) {
   .reveal { opacity: 1; animation: none; }
