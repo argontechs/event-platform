@@ -42,6 +42,15 @@ const nextConfig = {
   serverExternalPackages: ["pino", "@prisma/client", ".prisma/client", "bcryptjs"],
   // Lint is run explicitly via `npm run lint`; keep production builds fast.
   eslint: { ignoreDuringBuilds: true },
+  // Image uploads go through Server Actions (portfolio, enquiry refs, payment
+  // proof, quote/package images). Default body limit is 1MB — too small for a
+  // single photo. storage.ts caps each file at 8MB, so 25mb allows a small
+  // batch while staying bounded for the 2GB VPS.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "25mb",
+    },
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
