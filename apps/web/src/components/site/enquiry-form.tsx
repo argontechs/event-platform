@@ -8,8 +8,18 @@ import type { Locale } from "@/lib/i18n/config";
 
 const initial: EnquiryState = { error: "" };
 
-function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
-  const { label, ...rest } = props;
+// Per-field validation message — same error style as the generic form error.
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return (
+    <p className="text-sm text-red-400" role="alert">
+      {msg}
+    </p>
+  );
+}
+
+function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: string; error?: string }) {
+  const { label, error, ...rest } = props;
   return (
     <label className="flex flex-col gap-1 text-sm">
       <span className="text-white/60">{label}</span>
@@ -17,6 +27,7 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: str
         {...rest}
         className="rounded-md border border-white/15 bg-white/5 px-3 py-2 text-white outline-none focus:border-[var(--brand,#2f6fed)] [&_option]:bg-white [&_option]:text-slate-900"
       />
+      <FieldError msg={error} />
     </label>
   );
 }
@@ -33,6 +44,15 @@ export function EnquiryForm({
   const steps = dict.steps;
   const last = steps.length - 1;
   const f = dict.fields;
+  // The action returns stable error keys — translate them here.
+  const fieldErr = (name: string): string | undefined => {
+    const key = state.fieldErrors?.[name];
+    if (!key) return undefined;
+    return dict.errors[key] ?? dict.errors.invalid ?? dict.errorGeneric;
+  };
+  const genericError = state.error
+    ? (dict.errors[state.error] ?? dict.errorGeneric)
+    : "";
 
   return (
     <form action={formAction} className="flex flex-col gap-6">
@@ -72,10 +92,11 @@ export function EnquiryForm({
               </option>
             ))}
           </select>
+          <FieldError msg={fieldErr("eventType")} />
         </label>
-        <Input label={f.venue} name="venue" type="text" />
-        <Input label={f.eventDate} name="eventDate" type="date" />
-        <Input label={f.eventTime} name="eventTime" type="time" />
+        <Input label={f.venue} name="venue" type="text" error={fieldErr("venue")} />
+        <Input label={f.eventDate} name="eventDate" type="date" error={fieldErr("eventDate")} />
+        <Input label={f.eventTime} name="eventTime" type="time" error={fieldErr("eventTime")} />
       </div>
 
       {/* Step 2 — Vision */}
@@ -87,6 +108,7 @@ export function EnquiryForm({
             rows={3}
             className="rounded-md border border-white/15 bg-white/5 px-3 py-2 text-white outline-none focus:border-[var(--brand,#2f6fed)] [&_option]:bg-white [&_option]:text-slate-900"
           />
+          <FieldError msg={fieldErr("theme")} />
         </label>
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-white/60">{f.budget}</span>
@@ -102,9 +124,10 @@ export function EnquiryForm({
               </option>
             ))}
           </select>
+          <FieldError msg={fieldErr("budget")} />
         </label>
-        <Input label={f.guestCount} name="guestCount" type="number" min={0} />
-        <Input label={f.purpose} name="purpose" type="text" />
+        <Input label={f.guestCount} name="guestCount" type="number" min={0} error={fieldErr("guestCount")} />
+        <Input label={f.purpose} name="purpose" type="text" error={fieldErr("purpose")} />
       </div>
 
       {/* Step 3 — Details */}
@@ -127,14 +150,15 @@ export function EnquiryForm({
             rows={4}
             className="rounded-md border border-white/15 bg-white/5 px-3 py-2 text-white outline-none focus:border-[var(--brand,#2f6fed)] [&_option]:bg-white [&_option]:text-slate-900"
           />
+          <FieldError msg={fieldErr("specialRequest")} />
         </label>
       </div>
 
       {/* Step 4 — Contact */}
       <div className={step === 3 ? "grid gap-4 sm:grid-cols-2" : "hidden"}>
-        <Input label={f.name} name="name" type="text" required />
-        <Input label={f.phone} name="phone" type="tel" required />
-        <Input label={f.email} name="email" type="email" required />
+        <Input label={f.name} name="name" type="text" required error={fieldErr("name")} />
+        <Input label={f.phone} name="phone" type="tel" required error={fieldErr("phone")} />
+        <Input label={f.email} name="email" type="email" required error={fieldErr("email")} />
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-white/60">{f.language}</span>
           <select
@@ -146,12 +170,13 @@ export function EnquiryForm({
             <option value="MS">Bahasa Malaysia</option>
             <option value="ZH">中文</option>
           </select>
+          <FieldError msg={fieldErr("preferredLanguage")} />
         </label>
       </div>
 
       {state.error ? (
         <p className="text-sm text-red-400" role="alert">
-          {state.error}
+          {genericError}
         </p>
       ) : null}
 

@@ -5,11 +5,24 @@ import { addLeadImagesAction, type UploadMoreState } from "@/lib/leads/actions";
 
 const initial: UploadMoreState = { error: "" };
 
+// The action returns stable error keys; this page renders them in English
+// (it sits outside the localised customer funnel).
+const ERRORS: Record<string, string> = {
+  rateLimited: "Too many attempts. Try again in {minutes} minute(s).",
+  invalidLink: "This link is invalid.",
+  wrongPin: "Incorrect access code.",
+  noPhotos: "Please choose at least one photo.",
+  uploadFailed: "Upload failed — please try again.",
+};
+
 export function LeadUploadForm({ token }: { token: string }) {
   const [state, action, pending] = useActionState(
     addLeadImagesAction.bind(null, token),
     initial,
   );
+  const errText = state.error
+    ? (ERRORS[state.error] ?? state.error).replace("{minutes}", String(state.minutes ?? ""))
+    : "";
 
   if (state.ok) {
     return (
@@ -43,7 +56,7 @@ export function LeadUploadForm({ token }: { token: string }) {
           className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-accent"
         />
       </label>
-      {state.error ? <p className="text-sm text-red-500">{state.error}</p> : null}
+      {state.error ? <p className="text-sm text-red-500">{errText}</p> : null}
       <button
         type="submit"
         disabled={pending}

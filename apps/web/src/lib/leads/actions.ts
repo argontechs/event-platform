@@ -11,6 +11,8 @@ import { getCompanyByHost } from "../tenant";
 import { isRateLimited, recordFailure, clearAttempts } from "../rate-limit";
 import { EnquirySchema, BUDGET_MAP } from "./schema";
 
+// `error` and `fieldErrors` values are stable keys from the `form.errors`
+// dictionary namespace — translated at render in the enquiry form.
 export type EnquiryState = { error: string; fieldErrors?: Record<string, string> };
 
 // Public-form abuse controls (in-memory; per-process).
@@ -24,7 +26,9 @@ const LEAD_STATUSES = [
   "NEW", "REVIEWING", "QUOTED", "ACCEPTED", "REJECTED", "CONVERTED", "LOST",
 ] as const;
 
-export type UploadMoreState = { error: string; ok?: boolean; count?: number };
+// `error` is a stable key (rendered in English by the upload form); `minutes`
+// feeds the rate-limit "try again in N minutes" interpolation.
+export type UploadMoreState = { error: string; ok?: boolean; count?: number; minutes?: number };
 
 /** Public: customer adds more reference photos via the password-gated link. */
 export async function addLeadImagesAction(
@@ -35,11 +39,11 @@ export async function addLeadImagesAction(
   const rlKey = `lead-pin:${token}`;
   const gate = isRateLimited(rlKey, LEAD_PIN_LIMIT);
   if (gate.limited) {
-    return { error: `Too many attempts. Try again in ${Math.ceil(gate.retryAfterSec / 60)} minute(s).` };
+    return { error: "rateLimited", minutes: Math.ceil(gate.retryAfterSec / 60) };
   }
 
   const lead = await prisma.lead.findUnique({ where: { uploadToken: token } });
-  if (!lead) return { error: "This link is invalid." };
+  if (!lead) return { error: "invalidLink" };
 
   const pin = String(formData.get("pin") ?? "").trim();
   // Rate-limited + constant-time compare (the PIN is a short numeric code).
@@ -49,7 +53,7 @@ export async function addLeadImagesAction(
     timingSafeEqual(Buffer.from(pin), Buffer.from(lead.uploadPin));
   if (!ok) {
     recordFailure(rlKey, LEAD_PIN_LIMIT);
-    return { error: "Incorrect access code." };
+    return { error: "wrongPin" };
   }
   clearAttempts(rlKey);
 
@@ -57,7 +61,7 @@ export async function addLeadImagesAction(
     .getAll("images")
     .filter((f): f is File => f instanceof File && f.size > 0)
     .slice(0, 10); // cap per submission
-  if (files.length === 0) return { error: "Please choose at least one photo." };
+  if (files.length === 0) return { error: "noPhotos" };
 
   let saved = 0;
   for (const file of files) {
@@ -80,7 +84,7 @@ export async function addLeadImagesAction(
       // skip bad file
     }
   }
-  if (saved === 0) return { error: "Upload failed — please try again." };
+  if (saved === 0) return { error: "uploadFailed" };
   return { error: "", ok: true, count: saved };
 }
 
@@ -117,7 +121,7 @@ export async function submitEnquiryAction(
   // Anti-spam / anti-amplification: cap enquiries per client IP.
   const ip = await clientIp();
   if (isRateLimited(`enquiry:${ip}`, ENQUIRY_LIMIT).limited) {
-    return { error: "Too many submissions. Please try again in a few minutes." };
+    return { error: "tooMany" };
   }
   recordFailure(`enquiry:${ip}`, ENQUIRY_LIMIT);
 
@@ -144,7 +148,7 @@ export async function submitEnquiryAction(
       const k = issue.path.join(".");
       if (k && !fieldErrors[k]) fieldErrors[k] = issue.message;
     }
-    return { error: "Please complete the required fields.", fieldErrors };
+    return { error: "validation", fieldErrors };
   }
   const d = parsed.data;
 
@@ -157,7 +161,7 @@ export async function submitEnquiryAction(
       orderBy: { createdAt: "asc" },
     });
   }
-  if (!company) return { error: "No company is configured yet." };
+  if (!company) return { error: "noCompany" };
 
   const email = d.email.toLowerCase();
   let customer = await prisma.customer.findFirst({

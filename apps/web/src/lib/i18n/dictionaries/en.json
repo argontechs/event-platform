@@ -41,6 +41,104 @@
     "tagline": "Bespoke events & decoration.",
     "rights": "All rights reserved."
   },
+  "stats": {
+    "events": "Events styled",
+    "years": "Years of magic",
+    "designs": "Bespoke designs",
+    "love": "Client love"
+  },
+  "packages": {
+    "title": "Our Packages",
+    "subtitle": "Pick a package or mix and match — we'll tailor it to your event.",
+    "comingSoon": "Packages coming soon.",
+    "enquireNow": "Enquire now",
+    "included": "Included",
+    "otherCategory": "Other",
+    "pagination": "Pagination"
+  },
+  "quote": {
+    "quotation": "Quotation",
+    "preparedFor": "Prepared for",
+    "status": {
+      "DRAFT": "Being prepared",
+      "SENT": "Awaiting your review",
+      "ACCEPTED": "Accepted",
+      "REJECTED": "Declined",
+      "EXPIRED": "Expired"
+    },
+    "draftNotice": "This quotation is still being prepared. Please check back soon.",
+    "changesReceived": "Thanks — we've received your change request and are preparing a revised proposal. We'll send you a new link shortly.",
+    "expiredNotice": "This quote expired on {date}. Please contact us for an updated proposal.",
+    "contactLabel": "Contact:",
+    "replyHint": "Please reply to the message that sent you this link.",
+    "referenceAlt": "reference",
+    "payment": {
+      "title": "Pay your deposit",
+      "depositDue": "Deposit due:",
+      "bankTransfer": "Bank transfer",
+      "duitnowQr": "DuitNow QR",
+      "copy": "Copy",
+      "copied": "Copied",
+      "scanToPay": "Scan with your banking app to pay {amount}",
+      "qrNotConfigured": "QR not configured.",
+      "methods": {
+        "BANK_TRANSFER": "Bank transfer",
+        "DUITNOW_QR": "DuitNow QR",
+        "CASH": "Cash",
+        "OTHER": "Other"
+      },
+      "statuses": {
+        "PENDING": "Pending confirmation",
+        "CONFIRMED": "Confirmed",
+        "REJECTED": "Rejected"
+      }
+    },
+    "gate": {
+      "title": "Your proposal",
+      "subtitle": "Enter the access code we sent you to view it.",
+      "placeholder": "6-digit access code",
+      "opening": "Opening…",
+      "view": "View proposal"
+    },
+    "accept": {
+      "cta": "Accept & Proceed to Payment",
+      "processing": "Processing…"
+    },
+    "changes": {
+      "success": "Thanks! Your requested changes were sent to our team. We'll prepare a revised proposal and send you a new link shortly.",
+      "open": "Request changes",
+      "prompt": "Tell us what you'd like adjusted — and add inspiration photos if you have any.",
+      "placeholder": "e.g. We'd prefer more greenery, a longer head table, and a blush-and-gold palette.",
+      "sending": "Sending…",
+      "send": "Send change request",
+      "cancel": "Cancel"
+    },
+    "proof": {
+      "success": "Thank you — we've received your payment proof and will confirm shortly.",
+      "amount": "Amount paid (RM)",
+      "method": "Method",
+      "reference": "Reference / transaction no.",
+      "file": "Payment proof (screenshot/receipt)",
+      "uploading": "Uploading…",
+      "submit": "Submit payment proof"
+    },
+    "errors": {
+      "rateLimited": "Too many attempts. Try again in {minutes} minute(s).",
+      "tooManyRequests": "Too many requests. Please try again in a few minutes.",
+      "invalidLink": "This link is invalid.",
+      "wrongPin": "Incorrect access code.",
+      "unlockFirst": "Please open the proposal with your access code first.",
+      "notFound": "Not found.",
+      "notChangeable": "This proposal can no longer be changed.",
+      "commentRequired": "Please tell us what you'd like changed.",
+      "quoteNotFound": "Quote not found.",
+      "notPayable": "This proposal is not open for payment.",
+      "acceptFirst": "Please accept the quote first.",
+      "invalidAmount": "Enter a valid payment amount.",
+      "amountExceeds": "Amount exceeds the outstanding balance (RM {balance}).",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
   "form": {
     "title": "Plan your event",
     "subtitle": "Share a few details and we'll prepare a tailored proposal.",
@@ -88,6 +186,15 @@
       "ref": "Your reference number",
       "home": "Back to home"
     },
-    "errorGeneric": "Something went wrong. Please try again."
+    "errorGeneric": "Something went wrong. Please try again.",
+    "errors": {
+      "tooMany": "Too many submissions. Please try again in a few minutes.",
+      "validation": "Please complete the required fields.",
+      "noCompany": "No company is configured yet.",
+      "nameRequired": "Name is required",
+      "emailInvalid": "Valid email required",
+      "phoneRequired": "Phone is required",
+      "invalid": "Please check this field."
+    }
   }
 }

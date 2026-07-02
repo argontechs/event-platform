@@ -28,6 +28,71 @@ export interface Dictionary {
   about: { title: string; body: string };
   contact: { title: string; subtitle: string; cta: string };
   footer: { tagline: string; rights: string };
+  stats: {
+    events: string;
+    years: string;
+    designs: string;
+    love: string;
+  };
+  packages: {
+    title: string;
+    subtitle: string;
+    comingSoon: string;
+    enquireNow: string;
+    included: string;
+    otherCategory: string;
+    pagination: string;
+  };
+  quote: {
+    quotation: string;
+    preparedFor: string;
+    status: Record<string, string>;
+    draftNotice: string;
+    changesReceived: string;
+    expiredNotice: string;
+    contactLabel: string;
+    replyHint: string;
+    referenceAlt: string;
+    payment: {
+      title: string;
+      depositDue: string;
+      bankTransfer: string;
+      duitnowQr: string;
+      copy: string;
+      copied: string;
+      scanToPay: string;
+      qrNotConfigured: string;
+      methods: Record<string, string>;
+      statuses: Record<string, string>;
+    };
+    gate: {
+      title: string;
+      subtitle: string;
+      placeholder: string;
+      opening: string;
+      view: string;
+    };
+    accept: { cta: string; processing: string };
+    changes: {
+      success: string;
+      open: string;
+      prompt: string;
+      placeholder: string;
+      sending: string;
+      send: string;
+      cancel: string;
+    };
+    proof: {
+      success: string;
+      amount: string;
+      method: string;
+      reference: string;
+      file: string;
+      uploading: string;
+      submit: string;
+    };
+    errors: Record<string, string>;
+  };
   form: {
     title: string;
     subtitle: string;
@@ -57,6 +122,7 @@ export interface Dictionary {
     submitting: string;
     success: { title: string; body: string; ref: string; home: string };
     errorGeneric: string;
+    errors: Record<string, string>;
   };
 }
 

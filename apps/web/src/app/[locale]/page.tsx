@@ -90,10 +90,10 @@ export default async function HomePage({
       <section className="border-y border-white/10 bg-white/[0.02]">
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-10 sm:px-6 md:grid-cols-4">
           {[
-            { n: "500+", l: "Events styled" },
-            { n: "10+", l: "Years of magic" },
-            { n: "100%", l: "Bespoke designs" },
-            { n: "5★", l: "Client love" },
+            { n: "500+", l: dict.stats.events },
+            { n: "10+", l: dict.stats.years },
+            { n: "100%", l: dict.stats.designs },
+            { n: "5★", l: dict.stats.love },
           ].map((s, i) => (
             <div key={i} className={`reveal reveal-${i + 1} text-center`}>
               <p className="gradient-text text-3xl font-bold sm:text-4xl">{s.n}</p>

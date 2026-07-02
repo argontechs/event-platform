@@ -39,9 +39,10 @@ export const EnquirySchema = z.object({
   purpose: z.string().optional(),
   guestCount: z.string().optional(),
   specialRequest: z.string().optional(),
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Valid email required"),
-  phone: z.string().min(3, "Phone is required"),
+  // Messages are stable `form.errors` dictionary keys, translated at render.
+  name: z.string().min(1, "nameRequired"),
+  email: z.string().email("emailInvalid"),
+  phone: z.string().min(3, "phoneRequired"),
   preferredLanguage: z.enum(["EN", "MS", "ZH"]),
   locale: z.enum(["en", "ms", "zh"]),
 });

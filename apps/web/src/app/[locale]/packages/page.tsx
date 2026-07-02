@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@event/db";
 import { isLocale } from "@/lib/i18n/config";
+import { getDictionary, type Dictionary } from "@/lib/i18n/dictionaries";
 import { getCompanyByHost } from "@/lib/tenant";
 import { parseInclusions, groupByCode, paginate, type CodeBlock } from "@/lib/packages/format";
 import { ZoomableImage } from "@/components/site/zoomable-image";
@@ -26,6 +27,7 @@ export default async function PackagesPage({
 }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
+  const t = getDictionary(locale).packages;
 
   const host = (await headers()).get("host");
   const company =
@@ -40,7 +42,7 @@ export default async function PackagesPage({
 
   // Flatten to category-tagged blocks, paginate, then re-group the page's
   // blocks into consecutive category runs so headers land once per run.
-  const flat = groupByCategory(packages as PkgRow[]).flatMap((g) =>
+  const flat = groupByCategory(packages as PkgRow[], t.otherCategory).flatMap((g) =>
     groupByCode(g.items).map((block) => ({ category: g.category, block })),
   );
   const { items: pageBlocks, page, pages } = paginate(flat, (await searchParams).page, BLOCKS_PER_PAGE);
@@ -53,11 +55,11 @@ export default async function PackagesPage({
 
   return (
     <main className="mx-auto max-w-6xl px-4 pb-24 pt-32 sm:px-6">
-      <h1 className="text-4xl font-semibold sm:text-5xl">Our Packages</h1>
-      <p className="mt-3 max-w-xl text-white/60">Pick a package or mix and match — we&apos;ll tailor it to your event.</p>
+      <h1 className="text-4xl font-semibold sm:text-5xl">{t.title}</h1>
+      <p className="mt-3 max-w-xl text-white/60">{t.subtitle}</p>
 
       {packages.length === 0 ? (
-        <p className="mt-12 text-white/50">Packages coming soon.</p>
+        <p className="mt-12 text-white/50">{t.comingSoon}</p>
       ) : (
         runs.map((run) => (
           <section key={run.category} className="mt-14">
@@ -72,7 +74,7 @@ export default async function PackagesPage({
                   if (batch.length === 0) return;
                   out.push(
                     <div key={`singles-${out.length}`} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                      {batch.map((p, i) => <SingleCard key={p.id} p={p} reveal={(i % 4) + 1} />)}
+                      {batch.map((p, i) => <SingleCard key={p.id} p={p} reveal={(i % 4) + 1} dict={t} />)}
                     </div>,
                   );
                   batch = [];
@@ -90,7 +92,7 @@ export default async function PackagesPage({
                         <span className="text-xs uppercase tracking-wide text-white/40">{b.code}</span>
                       </div>
                       <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                        {b.tiers.map((tp) => <TierCard key={tp.id} p={tp} />)}
+                        {b.tiers.map((tp) => <TierCard key={tp.id} p={tp} dict={t} />)}
                       </div>
                     </div>,
                   );
@@ -103,21 +105,21 @@ export default async function PackagesPage({
         ))
       )}
 
-      <Pager page={page} pages={pages} base={`/${locale}/packages`} />
+      <Pager page={page} pages={pages} base={`/${locale}/packages`} label={t.pagination} />
 
       <div className="mt-14">
         <Link href={`/${locale}/contact`} className="rounded-full px-6 py-3 font-medium text-white shadow-lg shadow-blue-500/30 transition hover:-translate-y-0.5 hover:brightness-110" style={{ backgroundColor: "var(--brand, #2f6fed)" }}>
-          Enquire now
+          {t.enquireNow}
         </Link>
       </div>
     </main>
   );
 }
 
-function Pager({ page, pages, base }: { page: number; pages: number; base: string }) {
+function Pager({ page, pages, base, label }: { page: number; pages: number; base: string; label: string }) {
   if (pages <= 1) return null;
   return (
-    <nav aria-label="Pagination" className="mt-12 flex items-center justify-center gap-2">
+    <nav aria-label={label} className="mt-12 flex items-center justify-center gap-2">
       {Array.from({ length: pages }, (_, i) => i + 1).map((n) =>
         n === page ? (
           <span key={n} aria-current="page" className="rounded-full px-3.5 py-1.5 text-sm font-medium text-white" style={{ backgroundColor: "var(--brand, #2f6fed)" }}>
@@ -146,10 +148,10 @@ type PkgRow = {
 };
 
 // Group packages by category, preserving first-seen order (Wedding, then Birthday, …).
-function groupByCategory(packages: PkgRow[]): { category: string; items: PkgRow[] }[] {
+function groupByCategory(packages: PkgRow[], otherLabel: string): { category: string; items: PkgRow[] }[] {
   const groups: { category: string; items: PkgRow[] }[] = [];
   for (const p of packages) {
-    const cat = p.category || "Other";
+    const cat = p.category || otherLabel;
     let g = groups.find((x) => x.category === cat);
     if (!g) {
       g = { category: cat, items: [] };
@@ -173,10 +175,10 @@ function Inclusions({ description }: { description: string | null }) {
   );
 }
 
-function Price({ price, originalPrice }: { price: unknown; originalPrice: unknown }) {
+function Price({ price, originalPrice, includedLabel }: { price: unknown; originalPrice: unknown; includedLabel: string }) {
   const p = Number(price);
   const op = originalPrice == null ? 0 : Number(originalPrice);
-  if (p <= 0) return <p className="whitespace-nowrap text-xs uppercase tracking-wide text-sky-300/70">Included</p>;
+  if (p <= 0) return <p className="whitespace-nowrap text-xs uppercase tracking-wide text-sky-300/70">{includedLabel}</p>;
   return (
     <p className="whitespace-nowrap font-semibold text-sky-300">
       {op > p ? <span className="mr-1 text-xs font-normal text-white/40 line-through">RM {money(op)}</span> : null}
@@ -185,7 +187,7 @@ function Price({ price, originalPrice }: { price: unknown; originalPrice: unknow
   );
 }
 
-function SingleCard({ p, reveal }: { p: PkgRow; reveal: number }) {
+function SingleCard({ p, reveal, dict }: { p: PkgRow; reveal: number; dict: Dictionary["packages"] }) {
   const imgs = Array.isArray(p.imageUrls) ? (p.imageUrls as string[]) : [];
   return (
     <div className={`card-glow reveal reveal-${reveal} overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]`}>
@@ -197,7 +199,7 @@ function SingleCard({ p, reveal }: { p: PkgRow; reveal: number }) {
       <div className="p-5">
         <div className="flex items-start justify-between gap-2">
           <h3 className="text-lg font-medium">{p.name}</h3>
-          <Price price={p.price} originalPrice={p.originalPrice} />
+          <Price price={p.price} originalPrice={p.originalPrice} includedLabel={dict.included} />
         </div>
         <Inclusions description={p.description} />
       </div>
@@ -205,7 +207,7 @@ function SingleCard({ p, reveal }: { p: PkgRow; reveal: number }) {
   );
 }
 
-function TierCard({ p }: { p: PkgRow }) {
+function TierCard({ p, dict }: { p: PkgRow; dict: Dictionary["packages"] }) {
   const imgs = Array.isArray(p.imageUrls) ? (p.imageUrls as string[]) : [];
   return (
     <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02]">
@@ -217,7 +219,7 @@ function TierCard({ p }: { p: PkgRow }) {
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
           <h4 className="text-base font-medium">{p.tierLabel ?? p.name}</h4>
-          <Price price={p.price} originalPrice={p.originalPrice} />
+          <Price price={p.price} originalPrice={p.originalPrice} includedLabel={dict.included} />
         </div>
         <Inclusions description={p.description} />
       </div>
