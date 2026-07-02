@@ -7,6 +7,7 @@ import { createInvoiceFromQuotationAction } from "@/lib/invoices/actions";
 import { QuotationEditor, type EditorLine } from "@/components/admin/quotation-editor";
 import { AiGenerateButton } from "@/components/admin/ai-generate-button";
 import { QuotationImages } from "@/components/admin/quotation-images";
+import { ConfirmSubmit } from "@/components/admin/confirm-submit";
 import { getBoLang } from "@/lib/i18n/bo";
 import { makeT } from "@/lib/i18n/t";
 import { CopyButton } from "@/components/ui/copy-button";
@@ -100,9 +101,23 @@ export default async function QuotationEditorPage({
             </button>
           </form>
           <form action={sendQuotationAction.bind(null, quotation.id)}>
-            <button className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition hover:brightness-110">
-              {quotation.sentAt ? t("Resend (new code)") : t("Send proposal")}
-            </button>
+            {quotation.sentAt ? (
+              // Resending invalidates the access code the customer already has.
+              <ConfirmSubmit
+                label={t("Resend with new code")}
+                title={t("Resend with a new access code?")}
+                description={t(
+                  "A new access code will be generated — the code the customer already has will stop working.",
+                )}
+                confirmLabel={t("Resend")}
+                variant="primary"
+                buttonClassName="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition hover:brightness-110"
+              />
+            ) : (
+              <button className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition hover:brightness-110">
+                {t("Send proposal")}
+              </button>
+            )}
           </form>
         </div>
       </div>

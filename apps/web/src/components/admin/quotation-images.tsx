@@ -11,6 +11,7 @@ import {
 } from "@/lib/quotations/actions";
 import { useBoLang } from "@/components/admin/bo-lang-context";
 import { makeT } from "@/lib/i18n/t";
+import { ConfirmSubmit } from "@/components/admin/confirm-submit";
 
 const initial: QuotationImageState = { error: "" };
 const genInitial: ConceptImageState = { error: "" };
@@ -182,9 +183,14 @@ export function QuotationImages({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={img.url} alt={img.filename ?? "design"} className="aspect-square w-full object-cover" />
               <form action={deleteQuotationImageAction.bind(null, img.id)} className="absolute right-1 top-1">
-                <button className="rounded bg-black/60 px-1.5 py-0.5 text-xs text-white opacity-0 transition group-hover:opacity-100" aria-label={t("Delete")}>
-                  ✕
-                </button>
+                <ConfirmSubmit
+                  label="✕"
+                  ariaLabel={t("Delete")}
+                  title={t("Delete this image?")}
+                  description={t("This cannot be undone.")}
+                  confirmLabel={t("Delete")}
+                  buttonClassName="rounded bg-black/60 px-1.5 py-0.5 text-xs text-white opacity-0 transition focus-visible:opacity-100 group-hover:opacity-100"
+                />
               </form>
             </div>
           ))}

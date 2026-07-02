@@ -4,6 +4,7 @@ import { requireUser, isSuperAdmin } from "@/lib/auth/rbac";
 import { getActiveCompanyId } from "@/lib/tenant";
 import { SelectCompanyNotice } from "@/components/admin/select-company-notice";
 import { PackageCreateForm } from "@/components/admin/package-create-form";
+import { ConfirmSubmit } from "@/components/admin/confirm-submit";
 import { addPackageImagesAction, deletePackageAction, togglePackageAction } from "@/lib/packages/actions";
 import { parseInclusions, clampPage } from "@/lib/packages/format";
 import { ZoomableImage } from "@/components/site/zoomable-image";
@@ -121,7 +122,13 @@ export default async function PackagesAdminPage({
                         </button>
                       </form>
                       <form action={deletePackageAction.bind(null, p.id)}>
-                        <button className="rounded-md border border-slate-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50">{t("Delete")}</button>
+                        <ConfirmSubmit
+                          label={t("Delete")}
+                          title={t("Delete this package?")}
+                          description={t("This cannot be undone.")}
+                          confirmLabel={t("Delete")}
+                          buttonClassName="rounded-md border border-slate-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+                        />
                       </form>
                       {!p.active ? <span className="text-xs text-slate-400">{t("hidden from site")}</span> : null}
                     </div>
