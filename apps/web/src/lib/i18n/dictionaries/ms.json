@@ -45,6 +45,104 @@
     "tagline": "Acara & hiasan tersuai.",
     "rights": "Hak cipta terpelihara."
   },
+  "stats": {
+    "events": "Majlis digayakan",
+    "years": "Tahun keajaiban",
+    "designs": "Reka bentuk tersuai",
+    "love": "Kepuasan pelanggan"
+  },
+  "packages": {
+    "title": "Pakej Kami",
+    "subtitle": "Pilih satu pakej atau gabungkan mengikut citarasa — kami sesuaikan dengan majlis anda.",
+    "comingSoon": "Pakej akan datang tidak lama lagi.",
+    "enquireNow": "Buat pertanyaan",
+    "included": "Termasuk",
+    "otherCategory": "Lain-lain",
+    "pagination": "Navigasi halaman"
+  },
+  "quote": {
+    "quotation": "Sebut Harga",
+    "preparedFor": "Disediakan untuk",
+    "status": {
+      "DRAFT": "Sedang disediakan",
+      "SENT": "Menunggu semakan anda",
+      "ACCEPTED": "Diterima",
+      "REJECTED": "Ditolak",
+      "EXPIRED": "Telah luput"
+    },
+    "draftNotice": "Sebut harga ini masih disediakan. Sila semak semula tidak lama lagi.",
+    "changesReceived": "Terima kasih — permintaan perubahan anda telah diterima dan kami sedang menyediakan cadangan yang disemak semula. Pautan baharu akan dihantar tidak lama lagi.",
+    "expiredNotice": "Sebut harga ini telah luput pada {date}. Sila hubungi kami untuk cadangan terkini.",
+    "contactLabel": "Hubungi:",
+    "replyHint": "Sila balas mesej yang menghantar pautan ini kepada anda.",
+    "referenceAlt": "rujukan",
+    "payment": {
+      "title": "Bayar deposit anda",
+      "depositDue": "Deposit perlu dibayar:",
+      "bankTransfer": "Pindahan bank",
+      "duitnowQr": "DuitNow QR",
+      "copy": "Salin",
+      "copied": "Disalin",
+      "scanToPay": "Imbas dengan aplikasi perbankan anda untuk membayar {amount}",
+      "qrNotConfigured": "Kod QR belum dikonfigurasikan.",
+      "methods": {
+        "BANK_TRANSFER": "Pindahan bank",
+        "DUITNOW_QR": "DuitNow QR",
+        "CASH": "Tunai",
+        "OTHER": "Lain-lain"
+      },
+      "statuses": {
+        "PENDING": "Menunggu pengesahan",
+        "CONFIRMED": "Disahkan",
+        "REJECTED": "Ditolak"
+      }
+    },
+    "gate": {
+      "title": "Cadangan anda",
+      "subtitle": "Masukkan kod akses yang kami hantar untuk melihatnya.",
+      "placeholder": "Kod akses 6 digit",
+      "opening": "Membuka…",
+      "view": "Lihat cadangan"
+    },
+    "accept": {
+      "cta": "Terima & Teruskan ke Pembayaran",
+      "processing": "Memproses…"
+    },
+    "changes": {
+      "success": "Terima kasih! Permintaan perubahan anda telah dihantar kepada pasukan kami. Kami akan menyediakan cadangan yang disemak semula dan menghantar pautan baharu tidak lama lagi.",
+      "open": "Mohon perubahan",
+      "prompt": "Beritahu kami apa yang anda ingin ubah — dan tambah gambar inspirasi jika ada.",
+      "placeholder": "cth. Kami mahukan lebih banyak hiasan hijau, meja utama yang lebih panjang, dan palet warna blush dan emas.",
+      "sending": "Menghantar…",
+      "send": "Hantar permintaan perubahan",
+      "cancel": "Batal"
+    },
+    "proof": {
+      "success": "Terima kasih — bukti pembayaran anda telah diterima dan akan disahkan tidak lama lagi.",
+      "amount": "Jumlah dibayar (RM)",
+      "method": "Kaedah",
+      "reference": "Rujukan / no. transaksi",
+      "file": "Bukti pembayaran (tangkapan skrin/resit)",
+      "uploading": "Memuat naik…",
+      "submit": "Hantar bukti pembayaran"
+    },
+    "errors": {
+      "rateLimited": "Terlalu banyak percubaan. Cuba lagi dalam {minutes} minit.",
+      "tooManyRequests": "Terlalu banyak permintaan. Sila cuba lagi dalam beberapa minit.",
+      "invalidLink": "Pautan ini tidak sah.",
+      "wrongPin": "Kod akses tidak betul.",
+      "unlockFirst": "Sila buka cadangan dengan kod akses anda terlebih dahulu.",
+      "notFound": "Tidak ditemui.",
+      "notChangeable": "Cadangan ini tidak lagi boleh diubah.",
+      "commentRequired": "Sila beritahu kami apa yang anda ingin ubah.",
+      "quoteNotFound": "Sebut harga tidak ditemui.",
+      "notPayable": "Cadangan ini tidak dibuka untuk pembayaran.",
+      "acceptFirst": "Sila terima sebut harga terlebih dahulu.",
+      "invalidAmount": "Masukkan jumlah pembayaran yang sah.",
+      "amountExceeds": "Jumlah melebihi baki tertunggak (RM {balance}).",
+      "generic": "Sesuatu tidak kena. Sila cuba lagi."
+    }
+  },
   "form": {
     "title": "Rancang majlis anda",
     "subtitle": "Kongsi beberapa butiran dan kami akan sediakan cadangan tersuai.",
@@ -92,6 +190,15 @@
       "ref": "Nombor rujukan anda",
       "home": "Kembali ke laman utama"
     },
-    "errorGeneric": "Sesuatu tidak kena. Sila cuba lagi."
+    "errorGeneric": "Sesuatu tidak kena. Sila cuba lagi.",
+    "errors": {
+      "tooMany": "Terlalu banyak penghantaran. Sila cuba lagi dalam beberapa minit.",
+      "validation": "Sila lengkapkan ruangan yang diperlukan.",
+      "noCompany": "Tiada syarikat dikonfigurasikan lagi.",
+      "nameRequired": "Nama diperlukan",
+      "emailInvalid": "E-mel yang sah diperlukan",
+      "phoneRequired": "Nombor telefon diperlukan",
+      "invalid": "Sila semak ruangan ini."
+    }
   }
 }

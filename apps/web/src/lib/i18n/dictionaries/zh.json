@@ -45,6 +45,104 @@
     "tagline": "定制活动与布置。",
     "rights": "版权所有。"
   },
+  "stats": {
+    "events": "活动案例",
+    "years": "年精彩历程",
+    "designs": "定制设计",
+    "love": "客户好评"
+  },
+  "packages": {
+    "title": "我们的配套",
+    "subtitle": "选择一个配套，或自由组合——我们将按您的活动量身定制。",
+    "comingSoon": "配套即将推出。",
+    "enquireNow": "立即咨询",
+    "included": "已包含",
+    "otherCategory": "其他",
+    "pagination": "分页导航"
+  },
+  "quote": {
+    "quotation": "报价单",
+    "preparedFor": "谨呈",
+    "status": {
+      "DRAFT": "准备中",
+      "SENT": "待您查看",
+      "ACCEPTED": "已接受",
+      "REJECTED": "已谢绝",
+      "EXPIRED": "已过期"
+    },
+    "draftNotice": "此报价单仍在准备中，请稍后再查看。",
+    "changesReceived": "谢谢——我们已收到您的修改请求，正在准备修订方案，稍后将向您发送新的链接。",
+    "expiredNotice": "此报价已于 {date} 过期。请联系我们获取最新方案。",
+    "contactLabel": "联系方式：",
+    "replyHint": "请回复向您发送此链接的消息。",
+    "referenceAlt": "参考图片",
+    "payment": {
+      "title": "支付订金",
+      "depositDue": "应付订金：",
+      "bankTransfer": "银行转账",
+      "duitnowQr": "DuitNow QR",
+      "copy": "复制",
+      "copied": "已复制",
+      "scanToPay": "使用您的银行应用扫码支付 {amount}",
+      "qrNotConfigured": "尚未配置二维码。",
+      "methods": {
+        "BANK_TRANSFER": "银行转账",
+        "DUITNOW_QR": "DuitNow QR",
+        "CASH": "现金",
+        "OTHER": "其他"
+      },
+      "statuses": {
+        "PENDING": "待确认",
+        "CONFIRMED": "已确认",
+        "REJECTED": "已拒绝"
+      }
+    },
+    "gate": {
+      "title": "您的方案",
+      "subtitle": "请输入我们发送给您的访问码以查看。",
+      "placeholder": "6 位访问码",
+      "opening": "打开中…",
+      "view": "查看方案"
+    },
+    "accept": {
+      "cta": "接受并前往付款",
+      "processing": "处理中…"
+    },
+    "changes": {
+      "success": "谢谢！您的修改请求已发送给我们的团队。我们将准备修订方案，并尽快向您发送新的链接。",
+      "open": "请求修改",
+      "prompt": "告诉我们您想调整的地方——如有灵感照片也可一并附上。",
+      "placeholder": "例如：我们想要更多绿植、更长的主桌，以及腮红粉与金色的配色。",
+      "sending": "发送中…",
+      "send": "发送修改请求",
+      "cancel": "取消"
+    },
+    "proof": {
+      "success": "谢谢——我们已收到您的付款凭证，将尽快确认。",
+      "amount": "支付金额（RM）",
+      "method": "付款方式",
+      "reference": "参考 / 交易编号",
+      "file": "付款凭证（截图/收据）",
+      "uploading": "上传中…",
+      "submit": "提交付款凭证"
+    },
+    "errors": {
+      "rateLimited": "尝试次数过多。请在 {minutes} 分钟后再试。",
+      "tooManyRequests": "请求次数过多。请几分钟后再试。",
+      "invalidLink": "此链接无效。",
+      "wrongPin": "访问码不正确。",
+      "unlockFirst": "请先使用访问码打开方案。",
+      "notFound": "未找到。",
+      "notChangeable": "此方案已无法修改。",
+      "commentRequired": "请告诉我们您想修改的内容。",
+      "quoteNotFound": "未找到报价单。",
+      "notPayable": "此方案目前不可付款。",
+      "acceptFirst": "请先接受报价。",
+      "invalidAmount": "请输入有效的付款金额。",
+      "amountExceeds": "金额超过未付余额（RM {balance}）。",
+      "generic": "出了点问题，请重试。"
+    }
+  },
   "form": {
     "title": "策划您的活动",
     "subtitle": "填写几项资料，我们将为您准备专属方案。",
@@ -92,6 +190,15 @@
       "ref": "您的参考编号",
       "home": "返回首页"
     },
-    "errorGeneric": "出了点问题，请重试。"
+    "errorGeneric": "出了点问题，请重试。",
+    "errors": {
+      "tooMany": "提交次数过多，请几分钟后再试。",
+      "validation": "请填写必填项。",
+      "noCompany": "尚未配置任何公司。",
+      "nameRequired": "请填写姓名",
+      "emailInvalid": "请填写有效的电子邮件",
+      "phoneRequired": "请填写电话号码",
+      "invalid": "请检查此项。"
+    }
   }
 }

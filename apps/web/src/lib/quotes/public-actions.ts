@@ -8,7 +8,9 @@ import { saveUpload } from "../storage";
 import { round05 } from "../quotations/calc";
 import { isRateLimited, recordFailure, clearAttempts } from "../rate-limit";
 
-export type UnlockState = { error: string };
+// `error` carries a stable key from the `quote.errors` dictionary namespace
+// (translated at render); `minutes` feeds the rate-limit interpolation.
+export type UnlockState = { error: string; minutes?: number };
 
 // 8 wrong PINs in 10 min → locked out for 15 min (the PIN is only 6 digits).
 const PIN_LIMIT = { max: 8, windowMs: 10 * 60 * 1000, lockMs: 15 * 60 * 1000 };
@@ -36,14 +38,14 @@ export async function unlockQuoteAction(
   const rlKey = `quote-pin:${token}`;
   const gate = isRateLimited(rlKey, PIN_LIMIT);
   if (gate.limited) {
-    return { error: `Too many attempts. Try again in ${Math.ceil(gate.retryAfterSec / 60)} minute(s).` };
+    return { error: "rateLimited", minutes: Math.ceil(gate.retryAfterSec / 60) };
   }
 
   const q = await prisma.quotation.findUnique({
     where: { publicToken: token },
     select: { viewPin: true },
   });
-  if (!q) return { error: "This link is invalid." };
+  if (!q) return { error: "invalidLink" };
   const pin = String(formData.get("pin") ?? "").trim();
   // Constant-time compare on equal-length buffers (timingSafeEqual throws otherwise).
   const ok =
@@ -52,7 +54,7 @@ export async function unlockQuoteAction(
     crypto.timingSafeEqual(Buffer.from(pin), Buffer.from(q.viewPin));
   if (!ok) {
     recordFailure(rlKey, PIN_LIMIT);
-    return { error: "Incorrect access code." };
+    return { error: "wrongPin" };
   }
   clearAttempts(rlKey);
 
@@ -68,6 +70,7 @@ export async function unlockQuoteAction(
   return { error: "" };
 }
 
+// `error` is a `quote.errors` dictionary key, translated at render.
 export type ChangeState = { error: string; ok?: boolean };
 
 /** Customer requests changes: comment + optional images → back to the BO. */
@@ -80,19 +83,19 @@ export async function requestChangesAction(
     where: { publicToken: token },
     include: { company: true },
   });
-  if (!q) return { error: "Not found." };
+  if (!q) return { error: "notFound" };
   if (isRateLimited(`quote-write:${token}`, WRITE_LIMIT).limited) {
-    return { error: "Too many requests. Please try again in a few minutes." };
+    return { error: "tooManyRequests" };
   }
   if (!(await pinUnlocked(token, q.viewPin))) {
-    return { error: "Please open the proposal with your access code first." };
+    return { error: "unlockFirst" };
   }
   recordFailure(`quote-write:${token}`, WRITE_LIMIT);
   // Only a live (sent, not yet accepted) proposal can be revised.
-  if (q.status !== "SENT") return { error: "This proposal can no longer be changed." };
+  if (q.status !== "SENT") return { error: "notChangeable" };
 
   const comment = String(formData.get("comment") ?? "").trim();
-  if (!comment) return { error: "Please tell us what you'd like changed." };
+  if (!comment) return { error: "commentRequired" };
 
   const files = formData
     .getAll("images")
@@ -197,7 +200,9 @@ export async function acceptQuoteAction(token: string): Promise<void> {
   revalidatePath(`/q/${token}`);
 }
 
-export type ProofState = { error: string; ok?: boolean };
+// `error` is a `quote.errors` dictionary key; `balance` feeds the
+// "amount exceeds the outstanding balance" interpolation.
+export type ProofState = { error: string; ok?: boolean; balance?: string };
 
 /** Customer uploads proof of the deposit payment (pending staff confirmation). */
 export async function submitPaymentProofAction(
@@ -209,26 +214,26 @@ export async function submitPaymentProofAction(
     where: { publicToken: token },
     include: { booking: true, company: true },
   });
-  if (!q) return { error: "Quote not found." };
+  if (!q) return { error: "quoteNotFound" };
   if (isRateLimited(`quote-write:${token}`, WRITE_LIMIT).limited) {
-    return { error: "Too many requests. Please try again in a few minutes." };
+    return { error: "tooManyRequests" };
   }
   if (!(await pinUnlocked(token, q.viewPin))) {
-    return { error: "Please open the proposal with your access code first." };
+    return { error: "unlockFirst" };
   }
   recordFailure(`quote-write:${token}`, WRITE_LIMIT);
-  if (q.status !== "ACCEPTED") return { error: "This proposal is not open for payment." };
-  if (!q.booking) return { error: "Please accept the quote first." };
+  if (q.status !== "ACCEPTED") return { error: "notPayable" };
+  if (!q.booking) return { error: "acceptFirst" };
 
   const amount = Number(formData.get("amount"));
   if (!Number.isFinite(amount) || amount <= 0) {
-    return { error: "Enter a valid payment amount." };
+    return { error: "invalidAmount" };
   }
   // Cap against the outstanding balance (small tolerance for cash rounding) so
   // a customer can't record an arbitrarily large "paid" figure.
   const balanceDue = Number(q.booking.balanceDue);
   if (balanceDue > 0 && amount > balanceDue + 0.05) {
-    return { error: `Amount exceeds the outstanding balance (RM ${balanceDue.toFixed(2)}).` };
+    return { error: "amountExceeds", balance: balanceDue.toFixed(2) };
   }
   const method = String(formData.get("method") ?? "BANK_TRANSFER");
   const reference = String(formData.get("reference") ?? "");

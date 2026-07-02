@@ -8,8 +8,15 @@ import { RequestChangesForm } from "@/components/site/request-changes-form";
 import { AcceptQuoteButton } from "@/components/site/accept-quote-button";
 import { BrandedDocument, type DocLine } from "@/components/admin/branded-document";
 import { CopyButton } from "@/components/ui/copy-button";
+import { HtmlLang } from "@/components/site/html-lang";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import type { Locale } from "@/lib/i18n/config";
 
 export const dynamic = "force-dynamic";
+
+// Page language follows the language the customer picked on their enquiry
+// (lead.preferredLanguage) — falls back to English when there is no lead.
+const LANG_TO_LOCALE: Record<string, Locale> = { EN: "en", MS: "ms", ZH: "zh" };
 
 function rm(n: number): string {
   return `RM ${n.toFixed(2)}`;
@@ -49,6 +56,8 @@ export default async function PublicQuotePage({
   if (!q) notFound();
 
   const primary = q.company.brandPrimary ?? "#2f6fed";
+  const locale: Locale = LANG_TO_LOCALE[q.lead?.preferredLanguage ?? ""] ?? "en";
+  const t = getDictionary(locale).quote;
 
   // Password gate — proposal links are protected by an access code.
   const store = await cookies();
@@ -56,7 +65,8 @@ export default async function PublicQuotePage({
   if (!unlocked) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-16" style={{ ["--brand" as string]: primary }}>
-        <QuoteGate token={token} company={q.company.name} />
+        <HtmlLang locale={locale} />
+        <QuoteGate token={token} company={q.company.name} dict={t} />
       </main>
     );
   }
@@ -98,26 +108,27 @@ export default async function PublicQuotePage({
       className="mx-auto max-w-3xl px-6 py-16"
       style={{ ["--brand" as string]: primary }}
     >
+      <HtmlLang locale={locale} />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <p className="text-lg font-semibold text-white">{q.company.name}</p>
-          <p className="text-sm text-white/50">Quotation {q.number}</p>
+          <p className="text-sm text-white/50">{t.quotation} {q.number}</p>
         </div>
         <span className="rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-wide text-white/70">
-          {q.status.toLowerCase()}
+          {t.status[q.status] ?? q.status.toLowerCase()}
         </span>
       </div>
 
       {q.customer ? (
         <p className="mt-4 text-sm text-white/60">
-          Prepared for <span className="text-white">{q.customer.name}</span>
+          {t.preparedFor} <span className="text-white">{q.customer.name}</span>
         </p>
       ) : null}
 
       {q.status === "DRAFT" ? (
         <p className="mt-10 rounded-lg border border-white/10 bg-white/[0.03] px-4 py-6 text-center text-white/60">
-          This quotation is still being prepared. Please check back soon.
+          {t.draftNotice}
         </p>
       ) : (
         <>
@@ -129,7 +140,7 @@ export default async function PublicQuotePage({
                 <img
                   key={a.id}
                   src={a.url}
-                  alt={a.filename ?? "reference"}
+                  alt={a.filename ?? t.referenceAlt}
                   className="aspect-[4/3] w-full rounded-lg border border-white/10 object-cover"
                 />
               ))}
@@ -158,16 +169,15 @@ export default async function PublicQuotePage({
           {sent ? (
             q.changesRequested ? (
               <p className="mt-8 rounded-lg border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-200">
-                Thanks — we&apos;ve received your change request and are preparing a revised
-                proposal. We&apos;ll send you a new link shortly.
+                {t.changesReceived}
               </p>
             ) : expired ? (
               <div className="mt-8 flex flex-col gap-3">
                 <div className="rounded-lg border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-200">
-                  This quote expired on {fmtDate(q.validUntil)}. Please contact us for an updated proposal.
+                  {t.expiredNotice.replace("{date}", fmtDate(q.validUntil))}
                   {q.company.phone || q.company.email ? (
                     <span className="mt-1 block text-amber-200/80">
-                      Contact:
+                      {t.contactLabel}
                       {q.company.phone ? (
                         <>
                           {" "}
@@ -187,19 +197,19 @@ export default async function PublicQuotePage({
                     </span>
                   ) : (
                     <span className="mt-1 block text-amber-200/80">
-                      Please reply to the message that sent you this link.
+                      {t.replyHint}
                     </span>
                   )}
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <RequestChangesForm token={token} />
+                  <RequestChangesForm token={token} dict={t} />
                 </div>
               </div>
             ) : (
               <div className="mt-8 flex flex-col gap-3">
                 <div className="flex flex-wrap items-center gap-3">
-                  <AcceptQuoteButton action={acceptQuoteAction.bind(null, token)} />
-                  <RequestChangesForm token={token} />
+                  <AcceptQuoteButton action={acceptQuoteAction.bind(null, token)} labels={t.accept} />
+                  <RequestChangesForm token={token} dict={t} />
                 </div>
               </div>
             )
@@ -208,14 +218,14 @@ export default async function PublicQuotePage({
           {/* Payment */}
           {accepted ? (
             <section className="mt-10 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-              <h2 className="text-lg font-semibold">Pay your deposit</h2>
+              <h2 className="text-lg font-semibold">{t.payment.title}</h2>
               <p className="mt-1 text-sm text-white/60">
-                Deposit due: <strong className="text-white">{rm(Number(q.depositAmount))}</strong>
+                {t.payment.depositDue} <strong className="text-white">{rm(Number(q.depositAmount))}</strong>
               </p>
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div className="rounded-lg border border-white/10 p-4 text-sm">
-                  <p className="text-xs uppercase tracking-wide text-white/40">Bank transfer</p>
+                  <p className="text-xs uppercase tracking-wide text-white/40">{t.payment.bankTransfer}</p>
                   <p className="mt-2 text-white/80">{q.company.bankName ?? "—"}</p>
                   <p className="text-white/80">{q.company.bankAccountName ?? ""}</p>
                   {q.company.bankAccountNo ? (
@@ -223,25 +233,25 @@ export default async function PublicQuotePage({
                       <p className="text-white/80">{q.company.bankAccountNo}</p>
                       <CopyButton
                         text={q.company.bankAccountNo}
-                        label="Copy"
-                        copiedLabel="Copied"
+                        label={t.payment.copy}
+                        copiedLabel={t.payment.copied}
                         className="rounded border border-white/15 px-2 py-0.5 text-xs text-white/70 transition hover:bg-white/10"
                       />
                     </div>
                   ) : null}
                 </div>
                 <div className="rounded-lg border border-white/10 p-4 text-sm">
-                  <p className="text-xs uppercase tracking-wide text-white/40">DuitNow QR</p>
+                  <p className="text-xs uppercase tracking-wide text-white/40">{t.payment.duitnowQr}</p>
                   {q.company.duitnowQrUrl ? (
                     <>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={q.company.duitnowQrUrl} alt="DuitNow QR" className="mt-2 h-44 w-44 rounded object-contain" />
+                      <img src={q.company.duitnowQrUrl} alt={t.payment.duitnowQr} className="mt-2 h-44 w-44 rounded object-contain" />
                       <p className="mt-2 text-xs text-white/50">
-                        Scan with your banking app to pay {rm(Number(q.depositAmount))}
+                        {t.payment.scanToPay.replace("{amount}", rm(Number(q.depositAmount)))}
                       </p>
                     </>
                   ) : (
-                    <p className="mt-2 text-white/50">QR not configured.</p>
+                    <p className="mt-2 text-white/50">{t.payment.qrNotConfigured}</p>
                   )}
                 </div>
               </div>
@@ -251,15 +261,15 @@ export default async function PublicQuotePage({
                 <ul className="mt-4 space-y-1 text-sm">
                   {q.booking.payments.map((p) => (
                     <li key={p.id} className="flex justify-between text-white/60">
-                      <span>{rm(Number(p.amount))} · {p.method.toLowerCase()}</span>
-                      <span>{p.status.toLowerCase()}</span>
+                      <span>{rm(Number(p.amount))} · {t.payment.methods[p.method] ?? p.method.toLowerCase()}</span>
+                      <span>{t.payment.statuses[p.status] ?? p.status.toLowerCase()}</span>
                     </li>
                   ))}
                 </ul>
               ) : null}
 
               <div className="mt-6">
-                <PaymentProofForm token={token} suggestedAmount={Number(q.depositAmount)} />
+                <PaymentProofForm token={token} suggestedAmount={Number(q.depositAmount)} dict={t} />
               </div>
             </section>
           ) : null}
