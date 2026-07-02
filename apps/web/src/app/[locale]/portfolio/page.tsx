@@ -43,12 +43,12 @@ export default async function PortfolioPage({
                 href={company.instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sky-300 hover:underline"
+                className="text-[color:var(--brand-soft,#7dd3fc)] hover:underline"
               >
                 {dict.showcase.emptyInstagram} →
               </a>
             ) : null}
-            <Link href={`/${locale}/packages`} className="text-sky-300 hover:underline">
+            <Link href={`/${locale}/packages`} className="text-[color:var(--brand-soft,#7dd3fc)] hover:underline">
               {dict.showcase.emptyPackages} →
             </Link>
           </div>
