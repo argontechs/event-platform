@@ -122,36 +122,47 @@ export default async function HomePage({
       </section>
 
       {/* Showcase teaser */}
-      <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 sm:pb-24">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="text-3xl font-semibold sm:text-4xl">{dict.showcase.title}</h2>
-            <p className="mt-2 text-white/60">{dict.showcase.subtitle}</p>
+      {(showcase.length > 0 || !!company?.instagramUrl) && (
+        <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 sm:pb-24">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-3xl font-semibold sm:text-4xl">{dict.showcase.title}</h2>
+              <p className="mt-2 text-white/60">{dict.showcase.subtitle}</p>
+            </div>
+            {showcase.length > 0 && (
+              <Link href={`${base}/portfolio`} className="text-sm text-sky-300 hover:underline">
+                {dict.nav.portfolio} →
+              </Link>
+            )}
           </div>
-          <Link href={`${base}/portfolio`} className="text-sm text-sky-300 hover:underline">
-            {dict.nav.portfolio} →
-          </Link>
-        </div>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {showcase.length === 0
-            ? Array.from({ length: 6 }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`reveal reveal-${(i % 4) + 1} aspect-[4/3] rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-transparent`}
-                />
-              ))
-            : showcase.map((img, i) => (
+          {showcase.length > 0 ? (
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {showcase.map((img, i) => (
                 <div key={img.id} className={`card-glow reveal reveal-${(i % 4) + 1} overflow-hidden rounded-2xl border border-white/10`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={img.url}
-                    alt={img.filename ?? "showcase"}
+                    alt={dict.showcase.imageAlt.replace("{company}", company?.name ?? "")}
                     className="aspect-[4/3] w-full object-cover transition duration-500 hover:scale-105"
                   />
                 </div>
               ))}
-        </div>
-      </section>
+            </div>
+          ) : company?.instagramUrl ? (
+            <p className="mt-8 text-white/60">
+              {dict.showcase.emptyBody}{" "}
+              <a
+                href={company.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sky-300 hover:underline"
+              >
+                {dict.showcase.emptyInstagram} →
+              </a>
+            </p>
+          ) : null}
+        </section>
+      )}
 
       {/* About + CTA */}
       <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6 sm:pb-28">

@@ -26,7 +26,11 @@
   },
   "showcase": {
     "title": "Selected work",
-    "subtitle": "A glimpse of recent events we've brought to life."
+    "subtitle": "A glimpse of recent events we've brought to life.",
+    "emptyBody": "Our gallery is being curated — photos from recent events are on their way.",
+    "emptyInstagram": "See our latest work on Instagram",
+    "emptyPackages": "Browse our packages",
+    "imageAlt": "Event styling by {company}"
   },
   "about": {
     "title": "Designed in detail",
