@@ -40,7 +40,14 @@ export async function createPackageAction(
   for (const file of files) {
     try {
       const stored = await saveUpload(companyId, file);
-      if (stored) imageUrls.push(stored.url);
+      if (stored) {
+        imageUrls.push(stored.url);
+        // The uploads route fails closed: without a public-kind Attachment row
+        // the image 403s for anonymous visitors on the public site.
+        await prisma.attachment.create({
+          data: { companyId, kind: "PACKAGE", url: stored.url, filename: stored.filename, mimeType: stored.mimeType, sizeBytes: stored.size },
+        });
+      }
     } catch {
       // skip bad file
     }
@@ -110,7 +117,12 @@ export async function addPackageImagesAction(packageId: string, formData: FormDa
   for (const file of files) {
     try {
       const stored = await saveUpload(pkg.companyId, file);
-      if (stored) urls.push(stored.url);
+      if (stored) {
+        urls.push(stored.url);
+        await prisma.attachment.create({
+          data: { companyId: pkg.companyId, kind: "PACKAGE", url: stored.url, filename: stored.filename, mimeType: stored.mimeType, sizeBytes: stored.size },
+        });
+      }
     } catch {
       // skip
     }

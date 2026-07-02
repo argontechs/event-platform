@@ -45,8 +45,11 @@ apps/web/e2e/.fixtures.json
 apps/web/.auth/
 
 # runtime user uploads (local-disk storage volume)
+# NB: keep this root-anchored — a bare "uploads/" also ignores source dirs
+# like apps/web/src/app/api/uploads/ (which silently kept the serving route
+# out of git until 2026-07-02).
 apps/web/uploads/
-uploads/
+/uploads/
 
 # playwright-mcp browser session cache
 .playwright-mcp/
