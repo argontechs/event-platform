@@ -4,14 +4,16 @@
 // (non-nonce) framework runtime need 'unsafe-inline'/'unsafe-eval' for scripts;
 // the rest is tightened (object-src none, base-uri/form-action/frame-ancestors
 // self) for defense-in-depth alongside React's auto-escaping.
+// impeccable live mode injects from http://localhost:8400 — dev only, never in prod.
+const liveOrigin = process.env.NODE_ENV === "production" ? "" : " http://localhost:8400";
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:8400",
+  `script-src 'self' 'unsafe-inline' 'unsafe-eval'${liveOrigin}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   "media-src 'self'",
-  "connect-src 'self' http://localhost:8400 https://nominatim.openstreetmap.org https://api.openai.com https://api.anthropic.com https://api.cloudflare.com https://graph.facebook.com",
+  `connect-src 'self'${liveOrigin} https://nominatim.openstreetmap.org https://api.openai.com https://api.anthropic.com https://api.cloudflare.com https://graph.facebook.com`,
   "frame-src 'self' https://www.openstreetmap.org",
   "worker-src 'self' blob:",
   "object-src 'none'",
