@@ -238,17 +238,20 @@ model Company {
 }
 
 model Package {
-  id          String   @id @default(cuid())
-  companyId   String
-  name        String
-  category    String?
-  description String?
-  price       Decimal  @default(0) @db.Decimal(12, 2)
-  imageUrls   Json     @default("[]") // array of /api/uploads/... image URLs
-  active      Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  companyId     String
+  name          String
+  code          String?  // design code, e.g. "CNW021" / "Package A" — groups a design's tiers
+  tierLabel     String?  // "Basic Backdrop" / "Full Backdrop"; null for one-off packages
+  category      String?
+  description   String?  // inclusions, "•"-separated (the quote importer parses this)
+  price         Decimal  @default(0) @db.Decimal(12, 2)
+  originalPrice Decimal? @db.Decimal(12, 2) // "was" price for the strikethrough; null = no discount
+  imageUrls     Json     @default("[]") // array of /api/uploads/... image URLs
+  active        Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
