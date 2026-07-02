@@ -5,6 +5,7 @@ import { prisma } from "@event/db";
 import { isLocale } from "@/lib/i18n/config";
 import { getCompanyByHost } from "@/lib/tenant";
 import { parseInclusions, groupByCode, paginate, type CodeBlock } from "@/lib/packages/format";
+import { ZoomableImage } from "@/components/site/zoomable-image";
 
 export const dynamic = "force-dynamic";
 
@@ -189,8 +190,7 @@ function SingleCard({ p, reveal }: { p: PkgRow; reveal: number }) {
   return (
     <div className={`card-glow reveal reveal-${reveal} overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]`}>
       {imgs[0] ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={imgs[0]} alt={p.name} className="aspect-[4/3] w-full object-cover" />
+        <ZoomableImage src={imgs[0]} alt={p.name} className="aspect-[4/3] w-full object-cover" />
       ) : (
         <div className="aspect-[4/3] w-full bg-gradient-to-br from-white/[0.08] to-transparent" />
       )}
@@ -210,8 +210,7 @@ function TierCard({ p }: { p: PkgRow }) {
   return (
     <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02]">
       {imgs[0] ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={imgs[0]} alt={p.tierLabel ?? p.name} className="aspect-[4/3] w-full object-cover" />
+        <ZoomableImage src={imgs[0]} alt={p.tierLabel ?? p.name} className="aspect-[4/3] w-full object-cover" />
       ) : (
         <div className="aspect-[4/3] w-full bg-gradient-to-br from-white/[0.08] to-transparent" />
       )}
