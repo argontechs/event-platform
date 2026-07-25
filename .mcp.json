@@ -4,6 +4,8 @@
       "type": "stdio",
       "command": "uvx",
       "args": [
+        "--with",
+        "setuptools<81",
         "semgrep-mcp"
       ],
       "env": {}

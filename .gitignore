@@ -53,3 +53,4 @@ apps/web/uploads/
 
 # playwright-mcp browser session cache
 .playwright-mcp/
+/.claude
